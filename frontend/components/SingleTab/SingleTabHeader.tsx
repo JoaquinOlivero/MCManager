@@ -24,10 +24,15 @@ const SingleTabHeader = ({ tabType }: Props) => {
         return [{ href: "/", text: "Home" }, ...crumblist];
     }, [router.asPath]);
 
+    const goToPreviousCrumb = (breadcrumbs: any) => {
+        const pageToGo = breadcrumbs[breadcrumbs.length - 2].href
+        router.push(pageToGo)
+    }
+
     return (
         <div className={styles.SingleTabHeader}>
             <div className={styles.SingleTabHeader_left_side}>
-                <Arrow />
+                <Arrow onClick={() => goToPreviousCrumb(breadcrumbs)} />
                 <div className={styles.SingleTabHeader_breadcrumbs}>
                     {/* <Link href='/'>Home</Link> */}
                     {breadcrumbs.map((crumb: any, i: number) => {
