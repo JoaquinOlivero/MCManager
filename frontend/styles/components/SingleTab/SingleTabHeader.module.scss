@@ -1,0 +1,63 @@
+@use "../../Variables.module.scss" as v;
+
+.SingleTabHeader {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  .SingleTabHeader_left_side {
+    width: 40%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    svg {
+      width: 20px;
+      transform: rotate(180deg);
+      fill: white;
+      transition: fill 150ms;
+      &:hover {
+        cursor: pointer;
+        fill: v.$primary-color;
+      }
+    }
+
+    .SingleTabHeader_breadcrumbs {
+      margin-left: 20px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      .SingleTabHeader_breadcrumbs_content {
+        display: flex;
+        .SingleTabHeader_breadcrumbs_href {
+          opacity: 0.8;
+          color: v.$primary-color;
+          cursor: pointer;
+          transition: opacity 150ms;
+          &:hover {
+            opacity: 1;
+          }
+        }
+        .SingleTabHeader_breadcrumbs_separator {
+          margin: 0 5px;
+        }
+      }
+    }
+  }
+  .SingleTabHeader_title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20%;
+    height: 100%;
+    font-size: 25px;
+    text-transform: capitalize;
+    font-weight: 700;
+  }
+
+  .SingleTabHeader_crud {
+    width: 40%;
+    height: 100%;
+  }
+}

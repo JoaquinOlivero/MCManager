@@ -1,0 +1,20 @@
+@use "../../Variables.module.scss" as v;
+
+.SingleTab {
+  width: 100%;
+  height: 100%;
+  background-color: v.$secondary-background-color;
+  .SingleTab_header {
+    margin-right: auto;
+    margin-left: auto;
+    height: 6%;
+    width: 98%;
+    border-bottom: 4px solid v.$primary-background-color;
+  }
+  .SingleTab_content {
+    margin-right: auto;
+    margin-left: auto;
+    height: 94%;
+    width: 98%;
+  }
+}

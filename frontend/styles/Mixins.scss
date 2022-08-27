@@ -1,0 +1,29 @@
+@mixin scrollbars($display: true, $size, $foreground-color, $background-color) {
+  // For Google Chrome
+  &::-webkit-scrollbar {
+    @if $display {
+      width: $size;
+      height: $size;
+    } @else {
+      display: none;
+    }
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @if $display {
+      background: $foreground-color;
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    @if $display {
+      background: $background-color;
+    }
+  }
+
+  // For Internet Explorer
+  & {
+    scrollbar-face-color: $foreground-color;
+    scrollbar-track-color: $background-color;
+  }
+}

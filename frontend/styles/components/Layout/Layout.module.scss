@@ -1,0 +1,50 @@
+@use "../../Variables.module.scss" as v;
+
+.Layout {
+  width: 98%;
+  height: 98%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+
+  // Left persistent Menu scss
+  .Menu {
+    width: 10%;
+    height: 100%;
+    h2 {
+      margin: 0;
+    }
+    .Menu_content {
+      margin: 40px 0;
+      .Menu_content_tabs {
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 500;
+        width: 90%;
+        padding-bottom: 20px;
+        border-bottom: 4px solid v.$primary-color;
+        margin-bottom: 40px;
+        .Menu_tab {
+          margin-bottom: 10px;
+          span {
+            cursor: pointer;
+            position: relative;
+            transition: color 120ms;
+            &:hover {
+              color: v.$primary-color;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Nextjs Page
+  .Page {
+    width: 90%;
+    height: 100%;
+    background-color: v.$secondary-background-color;
+  }
+}

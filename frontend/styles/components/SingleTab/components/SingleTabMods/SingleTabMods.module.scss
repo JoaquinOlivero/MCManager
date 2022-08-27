@@ -1,0 +1,90 @@
+@use "../../../../Variables.module.scss" as v;
+@use "../../../../Mixins.scss" as m;
+
+.SingleTabMods {
+  font-family: "Roboto";
+  height: 100%;
+  width: 100%;
+
+  .SingleTabMods_header {
+    width: 100%;
+    height: 4%;
+    display: flex;
+    .SingleTabMods_header_info {
+      display: flex;
+      justify-content: space-between;
+      width: 50%;
+      height: 100%;
+      margin: 0 24px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+
+      span {
+        align-self: flex-end;
+        opacity: 0.5;
+        margin-bottom: 2px;
+      }
+      .SingleTabMods_info_filename {
+        // width: 80%;
+      }
+      // .SingleTabMods_info_details {
+      //   width: 20%;
+      //   font-size: 12px;
+      //   display: flex;
+      //   align-items: flex-end;
+      //   justify-content: space-between;
+      //   margin-bottom: 2px;
+      // }
+    }
+  }
+  .SingleTabMods_mods_container {
+    width: 100%;
+    height: 95%;
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    @include m.scrollbars(
+      none,
+      8px,
+      v.$primary-color,
+      v.$primary-background-color
+    );
+    .SingleTabMods_mod_container {
+      border-right: 2px solid v.$primary-background-color;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      letter-spacing: 0.4px;
+      width: 50%;
+      padding: 5px 0;
+      transition: all 50ms;
+      &:hover {
+        background-color: v.$primary-color-low-opacity;
+        svg {
+          fill: white;
+          opacity: 1;
+        }
+      }
+      svg {
+        margin-left: 5px;
+        width: 20px;
+        fill: #ed2025;
+        opacity: 0.8;
+      }
+      .SingleTabMods_mod_filename {
+        width: 85%;
+        margin-left: 5px;
+      }
+      // .SingleTabMods_mod_id {
+      //   overflow-x: hidden;
+      //   width: 12.5%;
+      //   font-size: 12px;
+      //   opacity: 0.5;
+      // }
+      .SingleTabMods_mod_version {
+      }
+    }
+  }
+}
