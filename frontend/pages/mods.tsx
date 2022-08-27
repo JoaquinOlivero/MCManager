@@ -25,7 +25,7 @@ const Mods: NextPage = () => {
     return (
         // single tab layout
         <SingleTab header={<SingleTabHeader tabType={"mods"} />}>
-            {mods && <SingleTabMods mods={mods} />}
+            <SingleTabMods mods={mods} />
         </SingleTab>
     )
 }

@@ -1,5 +1,6 @@
 import styles from '../../../../styles/components/SingleTab/components/SingleTabMods/SingleTabMods.module.scss'
 import JavaIcon from '../../../../svg/icons/JavaIcon'
+import Spinner from '../../../../svg/icons/Spinner'
 
 type Mod = {
     "fileName": string,
@@ -8,7 +9,7 @@ type Mod = {
 }
 
 type Props = {
-    mods: Array<Mod>
+    mods: Array<Mod> | null
 }
 
 const SingleTabMods = ({ mods }: Props) => {
@@ -25,7 +26,7 @@ const SingleTabMods = ({ mods }: Props) => {
                     <span>Version</span>
                 </div> */}
             </div>
-        if (mods.length === 1) {
+        if (mods!.length === 1) {
             headerArr.push(element)
         } else {
             var i = 0
@@ -38,22 +39,28 @@ const SingleTabMods = ({ mods }: Props) => {
     }
 
     return (
-        <div className={styles.SingleTabMods} key={"modsTab"}>
-            <div className={styles.SingleTabMods_header}>
-                {mods.length !== 0 && headerItems()}
-            </div>
-
-            <div className={styles.SingleTabMods_mods_container}>
-                {mods.map((mod: Mod, i: number) => {
-                    return <div key={mod.fileName} className={styles.SingleTabMods_mod_container} style={(i + 1) % 2 === 0 ? { borderRight: "none" } : {}}>
-                        <div><JavaIcon /></div>
-                        <div className={styles.SingleTabMods_mod_filename}>{mod.fileName}</div>
-                        {/* <div className={styles.SingleTabMods_mod_id}>{mod.version}</div> */}
+        <>
+            {mods ?
+                <div className={styles.SingleTabMods} key={"modsTab"}>
+                    <div className={styles.SingleTabMods_header}>
+                        {mods.length !== 0 && headerItems()}
                     </div>
-                })}
-            </div>
 
-        </div>
+                    <div className={styles.SingleTabMods_mods_container}>
+                        {mods.map((mod: Mod, i: number) => {
+                            return <div key={mod.fileName} className={styles.SingleTabMods_mod_container} style={(i + 1) % 2 === 0 ? { borderRight: "none" } : {}}>
+                                <div><JavaIcon /></div>
+                                <div className={styles.SingleTabMods_mod_filename}>{mod.fileName}</div>
+                                {/* <div className={styles.SingleTabMods_mod_id}>{mod.version}</div> */}
+                            </div>
+                        })}
+                    </div>
+
+                </div>
+                :
+                <Spinner />
+            }
+        </>
     )
 }
 
