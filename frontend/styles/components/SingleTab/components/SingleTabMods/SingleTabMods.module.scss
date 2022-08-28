@@ -59,21 +59,19 @@
       letter-spacing: 0.4px;
       width: 50%;
       padding: 5px 0;
-      transition: all 50ms;
       &:hover {
-        background-color: v.$primary-color-low-opacity;
-        svg {
-          fill: white;
-          opacity: 1;
-        }
+        background-color: v.$primary-background-color;
       }
       svg {
         margin-left: 5px;
         width: 20px;
         fill: #ed2025;
-        opacity: 0.8;
       }
       .SingleTabMods_mod_filename {
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
         width: 85%;
         margin-left: 5px;
       }
