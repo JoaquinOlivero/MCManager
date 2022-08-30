@@ -1,14 +1,28 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useMemo } from 'react'
+import { ChangeEvent, useMemo, useState } from 'react'
 import styles from '../../styles/components/SingleTab/SingleTabHeader.module.scss'
+import AddFile from '../../svg/icons/AddFile'
 import Arrow from '../../svg/icons/Arrow'
+import Edit from '../../svg/icons/Edit'
+import Trash from '../../svg/icons/Trash'
+
+type UploadStatus = {
+    "uploading": boolean
+    "finished": boolean
+    "status": boolean
+}
 
 type Props = {
     tabType: string
+    selectedFiles?: Array<string> | null
+    removeFiles: Function
+    uploadFiles?: Function
+    uploadStatus?: UploadStatus
 }
 
-const SingleTabHeader = ({ tabType }: Props) => {
+const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, uploadStatus }: Props) => {
+
     const router = useRouter()
 
     const breadcrumbs = useMemo(function generateBreadcrumbs() {
@@ -49,6 +63,27 @@ const SingleTabHeader = ({ tabType }: Props) => {
             </div>
 
             <div className={styles.SingleTabHeader_crud}>
+                <div className={styles.SingleTabHeader_crud_msg}>
+                    {uploadStatus?.uploading && !uploadStatus?.finished && <div>Uploading</div>}
+                    {uploadStatus?.finished && <div>{uploadStatus?.status ? "Mods uploaded Successfully!" : "Upload Failed"}</div>}
+                </div>
+                {tabType === "mods" && uploadFiles && <div className={`${styles.SingleTabHeader_crud_add} ${styles.SingleTabHeader_crud_btn}`}>
+                    <input type="file" multiple style={{ display: "none" }} id="file-input" accept='.jar' onChange={(e) => uploadFiles(e)} />
+                    <label htmlFor='file-input'>
+                        <AddFile />
+                        <span>Add</span>
+                    </label>
+                </div>}
+
+                {tabType === "config" && <div className={`${styles.SingleTabHeader_crud_edit} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles && selectedFiles.length === 1 ? 1 : 0.5, cursor: selectedFiles ? "pointer" : "default" }}>
+                    <Edit />
+                    <span>Edit</span>
+                </div>
+                }
+                <div className={`${styles.SingleTabHeader_crud_remove} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles ? 1 : 0.5, cursor: selectedFiles ? "pointer" : "default", pointerEvents: selectedFiles ? 'visible' : "none" }} onClick={() => removeFiles()}>
+                    <Trash />
+                    <span>Remove</span>
+                </div>
 
             </div>
         </div>

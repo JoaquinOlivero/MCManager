@@ -11,32 +11,12 @@ type Mod = {
 }
 
 type Props = {
-    mods: Array<Mod> | null
+    mods: Array<Mod> | null,
+    selectedMods: Array<string> | null
+    setSelectedMods: Function
 }
 
-
-// function modsListRefCallback() {
-//     const ref = useRef<HTMLDivElement | null>(null)
-//     const setRef = useCallback((node: HTMLDivElement) => {
-//       if (ref.current) {
-//         // Make sure to cleanup any events/references added to the last instance
-//       }
-
-//       if (node) {
-//         // Check if a node is actually passed. Otherwise node would be null.
-//         // You can now do what you need to, addEventListeners, measure, etc.
-//       }
-
-//       // Save a reference to the node
-//       ref.current = node
-//     }, [])
-
-//     return [setRef]
-//   }
-
-const SingleTabMods = ({ mods }: Props) => {
-    // const [modsListRef] = modsListRefCallback()
-    const [selectedMods, setSelectedMods] = useState<Array<string> | null>(null)
+const SingleTabMods = ({ mods, selectedMods, setSelectedMods }: Props) => {
     const [isCtrl, setIsCtrl] = useState<boolean>(false)
 
 
@@ -87,7 +67,7 @@ const SingleTabMods = ({ mods }: Props) => {
                 setSelectedMods(filteredMods)
                 return
             }
-            if (isCtrl) return setSelectedMods(oldArray => [...oldArray!, fileName])
+            if (isCtrl) return setSelectedMods((oldArray: Array<string>) => [...oldArray, fileName])
             if (modExists && selectedMods.length === 1) return setSelectedMods(null)
         }
 
@@ -103,6 +83,10 @@ const SingleTabMods = ({ mods }: Props) => {
         window.addEventListener("keyup", e => {
             if (!e.ctrlKey) setIsCtrl(false)
         })
+
+        return () => {
+            setSelectedMods(null)
+        }
     }, [])
 
     return (

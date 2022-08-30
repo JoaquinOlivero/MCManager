@@ -16,17 +16,28 @@ const (
 	MinecraftDirectory = "/secondDisk/Minecraft-Server/forge-data"
 )
 
+var (
+	modsDirectory = fmt.Sprintf("%v/mods", MinecraftDirectory)
+)
+
 func main() {
 	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", "5000")
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.SetTrustedProxies(nil)
 	// r.Use(static.Serve("/", static.LocalFile("../frontend/out/", false)))
 
 	// Setup route group for the API
 	api := r.Group("/api")
 	{
-		api.GET("/mods", handler.Mods(MinecraftDirectory))
+
+		mods := api.Group("/mods")
+		{
+			mods.GET("/", handler.Mods(modsDirectory))
+			mods.POST("/upload", handler.UploadMods((modsDirectory)))
+			mods.POST("/remove", handler.RemoveMods(modsDirectory))
+		}
 	}
 
 	port := os.Getenv("MCMANAGER_HTTP_PROXY_PORT")
