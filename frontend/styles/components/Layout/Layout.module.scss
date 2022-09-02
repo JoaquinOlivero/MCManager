@@ -39,6 +39,33 @@
         }
       }
     }
+
+    .Menu_settings {
+      .Menu_settings_tabs {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 500;
+        width: 90%;
+        padding-bottom: 20px;
+        margin-bottom: 40px;
+        .Menu_tab {
+          cursor: pointer;
+          opacity: 0.5;
+          margin-bottom: 10px;
+          transition: opacity 150ms;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          &:hover {
+            opacity: 1;
+          }
+          svg {
+            width: 16px;
+          }
+        }
+      }
+    }
   }
 
   // Nextjs Page

@@ -16,7 +16,7 @@ type UploadStatus = {
 type Props = {
     tabType: string
     selectedFiles?: Array<string> | null
-    removeFiles: Function
+    removeFiles?: Function
     uploadFiles?: Function
     uploadStatus?: UploadStatus
 }
@@ -80,10 +80,11 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, upl
                     <span>Edit</span>
                 </div>
                 }
-                <div className={`${styles.SingleTabHeader_crud_remove} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles ? 1 : 0.5, cursor: selectedFiles ? "pointer" : "default", pointerEvents: selectedFiles ? 'visible' : "none" }} onClick={() => removeFiles()}>
+                {removeFiles && <div className={`${styles.SingleTabHeader_crud_remove} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles ? 1 : 0.5, cursor: selectedFiles ? "pointer" : "default", pointerEvents: selectedFiles ? 'visible' : "none" }} onClick={() => removeFiles()}>
                     <Trash />
                     <span>Remove</span>
                 </div>
+                }
 
             </div>
         </div>
