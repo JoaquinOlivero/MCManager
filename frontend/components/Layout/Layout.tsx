@@ -15,7 +15,9 @@ const Layout = ({ children }: Props) => {
         <div className={styles.Layout}>
             {/* Left menu persistent layout */}
             <div className={styles.Menu}>
-                <h2>MCManager</h2>
+                <Link href='/'>
+                    <h2>MCManager</h2>
+                </Link>
                 <div className={styles.Menu_content}>
                     <div className={styles.Menu_content_tabs}>
                         <div className={styles.Menu_tab}>

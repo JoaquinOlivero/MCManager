@@ -17,7 +17,7 @@ type DockerContainer = {
 }
 
 type Props = {
-    settings: Settings
+    settings: Settings | null
     dockerContainers: Array<DockerContainer> | null
     getSettings: Function
 }

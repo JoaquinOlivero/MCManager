@@ -46,16 +46,20 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, upl
     return (
         <div className={styles.SingleTabHeader}>
             <div className={styles.SingleTabHeader_left_side}>
-                <Arrow onClick={() => goToPreviousCrumb(breadcrumbs)} />
-                <div className={styles.SingleTabHeader_breadcrumbs}>
-                    {/* <Link href='/'>Home</Link> */}
-                    {breadcrumbs.map((crumb: any, i: number) => {
-                        return <div key={crumb.text} className={styles.SingleTabHeader_breadcrumbs_content}>
-                            <Link href={crumb.href}><div className={styles.SingleTabHeader_breadcrumbs_href}>{crumb.text}</div></Link>
-                            <span className={styles.SingleTabHeader_breadcrumbs_separator}>{breadcrumbs.length - 1 !== i && "/"}</span>
+                {tabType !== "home" &&
+                    <>
+                        <Arrow onClick={() => goToPreviousCrumb(breadcrumbs)} />
+                        <div className={styles.SingleTabHeader_breadcrumbs}>
+                            {/* <Link href='/'>Home</Link> */}
+                            {breadcrumbs.map((crumb: any, i: number) => {
+                                return <div key={crumb.text} className={styles.SingleTabHeader_breadcrumbs_content}>
+                                    <Link href={crumb.href}><div className={styles.SingleTabHeader_breadcrumbs_href}>{crumb.text}</div></Link>
+                                    <span className={styles.SingleTabHeader_breadcrumbs_separator}>{breadcrumbs.length - 1 !== i && "/"}</span>
+                                </div>
+                            })}
                         </div>
-                    })}
-                </div>
+                    </>
+                }
             </div>
 
             <div className={styles.SingleTabHeader_title}>

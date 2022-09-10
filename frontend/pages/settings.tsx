@@ -44,7 +44,7 @@ const Settings = () => {
 
     return (
         <SingleTab header={<SingleTabHeader tabType={"settings"} />}>
-            {settings && <SingleTabSettings settings={settings} dockerContainers={docker} getSettings={getSettings} />}
+            <SingleTabSettings settings={settings} dockerContainers={docker} getSettings={getSettings} />
         </SingleTab>
     )
 }

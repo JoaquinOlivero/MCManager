@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	MinecraftDirectory string `json:"minecraft_directory"`
+	MinecraftServerIp  string `json:"minecraft_server_ip"`
 	RunMethod          string `json:"run_method"`
 	DockerContainerId  string `json:"docker_container_id"`
 	StartScript        string `json:"start_script"`

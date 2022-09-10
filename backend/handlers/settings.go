@@ -36,7 +36,7 @@ func GetSettings(c *gin.Context) {
 	for _, container := range containers {
 		dockerContainers = append(dockerContainers, DockerContainers{ContainerId: container.ID[:10], ContainerName: container.Names[0]})
 	}
-
+	cli.Close()
 	c.JSON(200, gin.H{"settings": settings, "docker_containers": dockerContainers})
 
 }
@@ -57,9 +57,21 @@ func ConnectDocker(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
+	// connect to docker container and obtain additional information
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err})
+	}
+	containerInfo, err := cli.ContainerInspect(context.Background(), body.ContainerId)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err})
+	}
+
 	// Save settings in config.json
 	settings.RunMethod = "docker"
 	settings.DockerContainerId = body.ContainerId
+	settings.MinecraftServerIp = containerInfo.NetworkSettings.IPAddress
+	settings.MinecraftDirectory = containerInfo.Mounts[0].Source
 
 	newSettings, err := json.Marshal(settings)
 	if err != nil {
@@ -69,6 +81,8 @@ func ConnectDocker(c *gin.Context) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	cli.Close()
 
 	c.Status(200)
 
@@ -81,6 +95,8 @@ func DisconnectDocker(c *gin.Context) {
 	// Reset docker settings in config.json
 	settings.RunMethod = ""
 	settings.DockerContainerId = ""
+	settings.MinecraftDirectory = ""
+	settings.MinecraftServerIp = ""
 	newSettings, err := json.Marshal(settings)
 	if err != nil {
 		fmt.Println(err)
