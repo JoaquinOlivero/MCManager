@@ -1,0 +1,69 @@
+@use "../../../../Variables.module.scss" as v;
+@use "../../../../Mixins.scss" as m;
+
+.SingleTabDirectory {
+  font-family: "Roboto";
+  height: 100%;
+  width: 100%;
+  .SingleTabDirectory_header {
+    width: 100%;
+    height: 4%;
+    display: flex;
+    .SingleTabDirectory_header_info {
+      display: flex;
+      justify-content: space-between;
+      width: 50%;
+      height: 100%;
+      margin: 0 24px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+
+      span {
+        align-self: flex-end;
+        opacity: 0.5;
+        margin-bottom: 2px;
+      }
+    }
+  }
+  .SingleTabDirectory_dir_container {
+    width: 100%;
+    height: 95%;
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    @include m.scrollbars(
+      none,
+      8px,
+      v.$primary-color,
+      v.$primary-background-color
+    );
+    .SingleTabDirectory_dir_content {
+      border-right: 2px solid v.$primary-background-color;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      letter-spacing: 0.4px;
+      width: 50%;
+      padding: 5px 0;
+      &:hover {
+        background-color: v.$primary-background-color;
+      }
+      svg {
+        margin-left: 5px;
+        width: 18px;
+        // fill: v.$primary-color;
+        opacity: 0.5;
+      }
+      .SingleTabDirectory_dir_name {
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        width: 85%;
+        margin-left: 5px;
+      }
+    }
+  }
+}

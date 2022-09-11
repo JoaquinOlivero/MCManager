@@ -34,6 +34,11 @@ func main() {
 			mods.POST("/remove", handler.RemoveMods)
 		}
 
+		configFiles := api.Group("/config")
+		{
+			configFiles.GET("/", handler.ConfigFiles)
+		}
+
 		settings := api.Group("/settings")
 		{
 			settings.GET("/", handler.GetSettings)

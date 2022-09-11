@@ -27,8 +27,7 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, upl
 
     const breadcrumbs = useMemo(function generateBreadcrumbs() {
         const asPathWithoutQuery = router.asPath.split("?")[0];
-        const asPathNestedRoutes = asPathWithoutQuery.split("/")
-            .filter(v => v.length > 0);
+        const asPathNestedRoutes = asPathWithoutQuery.split("/").filter(v => v.length > 0);
 
         const crumblist = asPathNestedRoutes.map((subpath, idx) => {
             const href = "/" + asPathNestedRoutes.slice(0, idx + 1).join("/");
@@ -51,7 +50,7 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, upl
                         <Arrow onClick={() => goToPreviousCrumb(breadcrumbs)} />
                         <div className={styles.SingleTabHeader_breadcrumbs}>
                             {/* <Link href='/'>Home</Link> */}
-                            {breadcrumbs.map((crumb: any, i: number) => {
+                            {breadcrumbs.map((crumb: { text: string, href: string }, i: number) => {
                                 return <div key={crumb.text} className={styles.SingleTabHeader_breadcrumbs_content}>
                                     <Link href={crumb.href}><div className={styles.SingleTabHeader_breadcrumbs_href}>{crumb.text}</div></Link>
                                     <span className={styles.SingleTabHeader_breadcrumbs_separator}>{breadcrumbs.length - 1 !== i && "/"}</span>
