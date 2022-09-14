@@ -40,17 +40,12 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
     [router.asPath]
   );
 
-  const goToPreviousCrumb = (breadcrumbs: any) => {
-    const pageToGo = breadcrumbs[breadcrumbs.length - 2].href;
-    router.push(pageToGo);
-  };
-
   return (
     <div className={styles.SingleTabHeader}>
       <div className={styles.SingleTabHeader_left_side}>
         {tabType !== "home" && (
           <>
-            <Arrow onClick={() => goToPreviousCrumb(breadcrumbs)} />
+            <Arrow onClick={() => router.back()} />
             <div className={styles.SingleTabHeader_breadcrumbs}>
               {/* <Link href='/'>Home</Link> */}
               {breadcrumbs.map((crumb: { text: string; href: string }, i: number) => {
