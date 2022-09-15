@@ -4,6 +4,7 @@ import SingleTab from '../components/SingleTab/SingleTab'
 import SingleTabHeader from '../components/SingleTab/SingleTabHeader'
 import styles from '../styles/Home.module.scss'
 import Spinner from '../svg/icons/Spinner'
+import { useRouter } from "next/router";
 
 type Data = {
   // motd: string
@@ -14,6 +15,7 @@ type Data = {
 }
 
 const Home: NextPage = () => {
+  const router = useRouter();
   const [serverInfo, setServerInfo] = useState<Data | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isStopping, setIsStopping] = useState<boolean>(false)
@@ -75,6 +77,10 @@ const Home: NextPage = () => {
   }
 
   useEffect(() => {
+    const asPathNestedRoutes = router.asPath.split("/").filter((v) => v.length > 0);
+    if (asPathNestedRoutes.length !== 1) {
+      router.push(router.asPath)
+    }
     getHomeData()
 
     return () => {

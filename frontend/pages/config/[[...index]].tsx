@@ -38,7 +38,7 @@ const Config: NextPage = () => {
       }
     }
 
-    return () => {};
+    return () => { };
   }, [router.asPath]);
 
   useEffect(() => {
