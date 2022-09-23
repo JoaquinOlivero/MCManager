@@ -23,3 +23,23 @@ a {
     background-color: #3B3853;
   }
 }
+
+.cm-scroller::-webkit-scrollbar {
+  background-color: #3b3853;
+  width: 8px;
+  height: 8px;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb{
+  background:#fe5260;
+}
+
+.cm-scroller::-webkit-scrollbar-track{
+  background: #3b3853;
+}
+
+.cm-scroller::-webkit-scrollbar-corner {
+  display: none;
+}
+
+

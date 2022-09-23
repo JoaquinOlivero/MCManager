@@ -1,20 +1,27 @@
-import { createContext, ReactNode, useState } from "react";
+import { createContext, ReactNode, useState, useContext } from "react";
 
-type Mod = {
-    "fileName": string,
-    "modId": string,
-    "version": string
-}
+// type Mod = {
+//     "fileName": string,
+//     "modId": string,
+//     "version": string
+// }
 
 
 type dataContextType = {
-    mods: Array<Mod> | null;
+    // mods: Array<Mod> | null;
+    editFilepath: string | null
+    setEditFilepath: (value: string | null) => void;
 }
 
 const dataContextDefaultValue: dataContextType = {
-    mods: null,
+    // mods: null,
+    editFilepath: null,
+    setEditFilepath: () => { },
 }
 
+export function useDataContext() {
+    return useContext(DataContext);
+}
 
 type Props = {
     children: ReactNode;
@@ -23,12 +30,15 @@ type Props = {
 const DataContext = createContext<dataContextType>(dataContextDefaultValue)
 
 export function DataProvider({ children }: Props) {
-    const [mods, setMods] = useState<Array<Mod> | null>(null)
+    const [editFilepath, setEditFilepath] = useState<string | null>(null)
+    // const [mods, setMods] = useState<Array<Mod> | null>(null)
 
 
 
     const value = {
-        mods
+        // mods
+        editFilepath,
+        setEditFilepath
     }
     return (
         <>

@@ -48,7 +48,7 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
             <Arrow onClick={() => router.back()} />
             <div className={styles.SingleTabHeader_breadcrumbs}>
               {/* <Link href='/'>Home</Link> */}
-              {breadcrumbs.map((crumb: { text: string; href: string }, i: number) => {
+              {tabType !== "edit" && breadcrumbs.map((crumb: { text: string; href: string }, i: number) => {
                 return (
                   <div key={crumb.text} className={styles.SingleTabHeader_breadcrumbs_content}>
                     <Link href={crumb.href}>
@@ -63,7 +63,7 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
         )}
       </div>
 
-      <div className={styles.SingleTabHeader_title}>{tabType}</div>
+      {tabType !== "edit" ? <div className={styles.SingleTabHeader_title}>{tabType}</div> : selectedFiles && selectedFiles.length > 0 && <div className={styles.SingleTabHeader_title}>{selectedFiles[selectedFiles.length - 1]}</div>}
 
       <div className={styles.SingleTabHeader_crud}>
         <div className={styles.SingleTabHeader_crud_msg}>

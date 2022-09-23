@@ -1,6 +1,7 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
+import { DataProvider } from '../contexts/DataContext'
 import Layout from '../components/Layout/Layout'
 
 function MyApp({ Component, pageProps }: AppProps) {
@@ -11,9 +12,11 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta name="description" content="Manage your minecraft server" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
+      <DataProvider>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </DataProvider>
     </div>
 
   )

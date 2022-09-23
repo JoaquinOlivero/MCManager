@@ -5,7 +5,7 @@
   width: 100%;
   display: flex;
   .SingleTabHeader_left_side {
-    width: 40%;
+    width: 30%;
     height: 100%;
     display: flex;
     align-items: center;
@@ -49,15 +49,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20%;
+    width: 40%;
     height: 100%;
-    font-size: 25px;
+    font-size: 20px;
     text-transform: capitalize;
     font-weight: 700;
   }
 
   .SingleTabHeader_crud {
-    width: 40%;
+    width: 30%;
     height: 100%;
     display: flex;
     align-items: center;

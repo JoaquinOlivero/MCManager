@@ -4,6 +4,7 @@ import SingleTabDirectory from "../../components/SingleTab/components/SingleTabD
 import SingleTab from "../../components/SingleTab/SingleTab";
 import SingleTabHeader from "../../components/SingleTab/SingleTabHeader";
 import { useRouter } from "next/router";
+import { useDataContext } from "../../contexts/DataContext"
 
 type ConfigData = {
   name: string;
@@ -12,14 +13,14 @@ type ConfigData = {
 } | null;
 
 const Config: NextPage = () => {
+  const { setEditFilepath } = useDataContext()
   const router = useRouter();
   const [configData, setConfigData] = useState<ConfigData | null>(null);
   const [currentConfigDir, setCurrentConfigDir] = useState<ConfigData | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   useEffect(() => {
-    const asPathNestedRoutes = router.asPath.split("/").filter((v) => v.length > 0);
-    getConfigDir(setConfigData, setCurrentConfigDir, asPathNestedRoutes);
+    getConfigDir(setConfigData);
 
     return () => {
       setConfigData(null);
@@ -34,13 +35,21 @@ const Config: NextPage = () => {
         setCurrentConfigDir(configData);
       } else {
         const currentDir = getCurrentDir(configData, asPathNestedRoutes);
-        setCurrentConfigDir(currentDir!);
+        if (currentDir) {
+          setCurrentConfigDir(currentDir!);
+        } else {
+          // if directory does not exist redirect to home page.
+          router.push("/")
+        }
+
+
       }
     }
 
     return () => { };
   }, [router.asPath]);
 
+  // when configData changes
   useEffect(() => {
     if (configData) {
       const asPathNestedRoutes = router.asPath.split("/").filter((v) => v.length > 0);
@@ -48,29 +57,39 @@ const Config: NextPage = () => {
         setCurrentConfigDir(configData);
       } else {
         const currentDir = getCurrentDir(configData, asPathNestedRoutes);
-        setCurrentConfigDir(currentDir!);
+        if (currentDir) {
+          setCurrentConfigDir(currentDir!);
+        } else {
+          // if directory does not exist redirect to home page.
+          router.push("/")
+        }
       }
     }
   }, [configData]);
 
-  // TODO: create edit file page and use https://github.com/uiwjs/react-textarea-code-editor <--- this library to edit files such as .json, .toml and .txt.
-  // The function handleEditFile() will transition to page /file/:id. The :id url parameter should be the path to the file in the config folder. For example: /config/byg/byg-biome-dictionary.json.
-  const handleEditFile = () => {
+  // The function handleEditFile() will set the context editFilepath state to the actual path of the file in the config directory, and then push to page "/edit".
+  const handleEditFile = async () => {
     const filepath = router.asPath + selectedFile;
+    await setEditFilepath(filepath)
+    router.push("/edit")
   };
 
   return (
-    // single tab layout
-    <SingleTab header={<SingleTabHeader tabType={"config"} editFile={handleEditFile} selectedFiles={[selectedFile!]} />}>
-      <SingleTabDirectory dir={currentConfigDir} selectedFile={selectedFile} setSelectedFile={setSelectedFile} />
-    </SingleTab>
+    <>
+      {currentConfigDir &&
+        // single tab layout
+        <SingleTab header={<SingleTabHeader tabType={"config"} editFile={handleEditFile} selectedFiles={[selectedFile!]} />}>
+          <SingleTabDirectory dir={currentConfigDir} selectedFile={selectedFile} setSelectedFile={setSelectedFile} />
+        </SingleTab>
+      }
+    </>
   );
 };
 
 export default Config;
 
 // Gets config directory from api. All of the files and subdirectories are recursively nested inside an array. In this case, data.children.
-const getConfigDir = async (setConfigData: Function, setCurrentConfigDir: Function, asPathNestedRoutes: Array<string>) => {
+const getConfigDir = async (setConfigData: Function) => {
   const res = await fetch("/api/config");
   const data: ConfigData = await res.json();
   if (res.status === 200 && data && data.children) {
@@ -78,7 +97,7 @@ const getConfigDir = async (setConfigData: Function, setCurrentConfigDir: Functi
   }
 };
 
-// Returns all files and subdirectories of a root node directory. Used in this component to access a subdirectory of minecraft's config root directory.
+// Returns all files and subdirectories of a root node directory. This function is used in this component to access a subdirectory of minecraft's config root directory.
 const getCurrentDir: any = (root: ConfigData, nestedPaths: Array<string>) => {
   const totalRoutes = nestedPaths.length;
   const lastSlug = nestedPaths[totalRoutes - 1];

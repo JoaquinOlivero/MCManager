@@ -27,6 +27,7 @@ func main() {
 	{
 		api.GET("/", handler.GetHomeInfo)
 		api.POST("/", handler.ControlServer)
+
 		mods := api.Group("/mods")
 		{
 			mods.GET("/", handler.Mods)
@@ -44,6 +45,11 @@ func main() {
 			settings.GET("/", handler.GetSettings)
 			settings.POST("/connect-docker", handler.ConnectDocker)
 			settings.POST("/disconnect-docker", handler.DisconnectDocker)
+		}
+
+		edit := api.Group("/edit")
+		{
+			edit.GET("/", handler.GetFile)
 		}
 	}
 

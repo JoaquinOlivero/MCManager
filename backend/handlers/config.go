@@ -14,7 +14,6 @@ func ConfigFiles(c *gin.Context) {
 	settings := config.GetValues()
 
 	configDir := fmt.Sprintf("%v/config", settings.MinecraftDirectory)
-	// fmt.Println(configDir)
 
 	directoryFiles, err := utils.DirectoryTree(configDir)
 	if err != nil {
