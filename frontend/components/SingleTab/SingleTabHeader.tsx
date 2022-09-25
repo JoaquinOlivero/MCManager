@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { ChangeEvent, useMemo, useState } from "react";
+import { useMemo } from "react";
 import styles from "../../styles/components/SingleTab/SingleTabHeader.module.scss";
 import AddFile from "../../svg/icons/AddFile";
 import Arrow from "../../svg/icons/Arrow";
 import Edit from "../../svg/icons/Edit";
+import Save from "../../svg/icons/Save";
 import Trash from "../../svg/icons/Trash";
 
 type UploadStatus = {
@@ -20,9 +21,10 @@ type Props = {
   uploadFiles?: Function;
   editFile?: Function;
   uploadStatus?: UploadStatus;
+  saveFile?: () => Promise<void>;
 };
 
-const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, editFile, uploadStatus }: Props) => {
+const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, editFile, uploadStatus, saveFile }: Props) => {
   const router = useRouter();
 
   const breadcrumbs = useMemo(
@@ -68,7 +70,7 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
       <div className={styles.SingleTabHeader_crud}>
         <div className={styles.SingleTabHeader_crud_msg}>
           {uploadStatus?.uploading && !uploadStatus?.finished && <div>Uploading</div>}
-          {uploadStatus?.finished && <div>{uploadStatus?.status ? "Mods uploaded Successfully!" : "Upload Failed"}</div>}
+          {uploadStatus?.finished && <div>{uploadStatus?.status ? "Success!" : "Failed!"}</div>}
         </div>
         {tabType === "mods" && uploadFiles && (
           <div className={`${styles.SingleTabHeader_crud_add} ${styles.SingleTabHeader_crud_btn}`}>
@@ -92,6 +94,15 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
             <span>Remove</span>
           </div>
         )}
+
+        {/* SingleTabEditFile section */}
+        {tabType === "edit" && saveFile &&
+
+          <div className={`${styles.SingleTabHeader_crud_save} ${styles.SingleTabHeader_crud_btn}`} onClick={() => saveFile()}>
+            <Save />
+            <span>Save File</span>
+          </div>
+        }
       </div>
     </div>
   );

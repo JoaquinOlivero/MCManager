@@ -39,7 +39,7 @@ a {
 }
 
 .cm-scroller::-webkit-scrollbar-corner {
-  display: none;
+  background: #3b3853;
 }
 
 

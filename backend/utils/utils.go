@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"errors"
+	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 )
 
@@ -56,5 +59,39 @@ func DirectoryTree(dir string) (result *Node, err error) {
 	}
 
 	return
+
+}
+
+func FileData(fullFilePath, fileFormat string) (map[string]interface{}, error) {
+	// Supported file extensions
+	supportedExtensions := [6]string{".toml", ".json", ".json5", ".properties", ".txt", ".cfg"}
+
+	var isSupported bool
+
+	for i := range supportedExtensions {
+		if fileFormat == supportedExtensions[i] {
+			isSupported = true
+		}
+	}
+
+	if !isSupported {
+		err := fmt.Sprintf("%v files are not supported.", fileFormat)
+		return nil, errors.New(err)
+	}
+
+	file, err := os.ReadFile(fullFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert the file binary into a string.
+	fileContent := string(file)
+
+	m := map[string]interface{}{
+		"file_content": fileContent,
+		"file_format":  fileFormat,
+	}
+
+	return m, nil
 
 }

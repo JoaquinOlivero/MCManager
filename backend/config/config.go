@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 type Config struct {
@@ -18,7 +18,7 @@ type Config struct {
 func GetValues() Config {
 
 	// Read config.json
-	content, err := ioutil.ReadFile("./config.json")
+	content, err := os.ReadFile("./config.json")
 	if err != nil {
 		fmt.Println("Error when opening config file: ", err)
 	}

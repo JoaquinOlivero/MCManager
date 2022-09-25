@@ -50,6 +50,7 @@ func main() {
 		edit := api.Group("/edit")
 		{
 			edit.GET("/", handler.GetFile)
+			edit.POST("/save", handler.SaveFile)
 		}
 	}
 

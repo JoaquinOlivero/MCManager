@@ -78,7 +78,7 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     const asPathNestedRoutes = router.asPath.split("/").filter((v) => v.length > 0);
-    if (asPathNestedRoutes.length !== 1) {
+    if (asPathNestedRoutes.length > 0) {
       router.push(router.asPath)
     }
     getHomeData()

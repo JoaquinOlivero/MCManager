@@ -1,43 +1,55 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Spinner from '../../../../svg/icons/Spinner';
-import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import CodeMirror from '@uiw/react-codemirror';
 import { langs } from '@uiw/codemirror-extensions-langs';
 import styles from '../../../../styles/components/SingleTab/components/SingleTabEditFile/SingleTabEditFile.module.scss'
-import { EditorView } from '@codemirror/view';
+import { Extension } from '@codemirror/state';
 
 type Props = {
   file: string | null
   setFile: (value: string | null) => void
+  fileFormat: string | null
 }
 
-const SingleTabEditFile = ({ file, setFile }: Props) => {
+const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
+  const [language, setLanguage] = useState<Extension | null>(null)
   const editorContainerRef = useRef<HTMLDivElement>(null)
-  const codeMirrorRef = useRef<ReactCodeMirrorRef>(null)
   const onChange = React.useCallback((value: string) => {
     setFile(value)
   }, []);
 
-  const handleOnCreateEditor = (view: EditorView) => {
-    const scrollDom = view.scrollDOM
-    // scrollDom.setAttributeNS(null, "className", styles.SingleTabEditFile_scrollbar)
-  }
-
   useEffect(() => {
-    // console.log(codeMirrorRef.current);
-  }, [codeMirrorRef.current])
-
+    if (fileFormat) {
+      switch (fileFormat) {
+        case ".json":
+        case ".json5":
+          setLanguage(langs.json())
+          break;
+        case ".toml":
+          setLanguage(langs.toml())
+          break;
+        case ".properties":
+          setLanguage(langs.properties())
+          break;
+        case ".cfg":
+        case ".txt":
+          setLanguage(langs.textile())
+          break;
+        default:
+          break;
+      }
+    }
+  }, [fileFormat])
 
   return (
     <div className={styles.SingleTabEditFile} ref={editorContainerRef}>
-      {file && editorContainerRef.current ?
+      {file && language && editorContainerRef.current ?
         <CodeMirror
           value={file}
           height={editorContainerRef.current!.clientHeight.toString() + "px"}
-          extensions={[langs.toml()]}
+          extensions={[language]}
           onChange={onChange}
           theme="dark"
-          ref={codeMirrorRef}
-          onCreateEditor={(view) => handleOnCreateEditor(view)}
         />
         :
         <Spinner />

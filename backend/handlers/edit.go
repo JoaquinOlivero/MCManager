@@ -2,33 +2,83 @@ package handler
 
 import (
 	"MCManager/config"
+	"MCManager/utils"
 	"fmt"
-	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetFile(c *gin.Context) {
-	// Get filepath from query
-	configFilePath := c.Query("filepath")
 
 	// Get settings
 	settings := config.GetValues()
+
 	// Set minecraft directory path
 	minecraftDirectory := settings.MinecraftDirectory
 
-	fullFilePath := fmt.Sprintf("%v%v", minecraftDirectory, configFilePath)
+	// set full filepath
+	fullFilePath := fmt.Sprintf("%v%v", minecraftDirectory, c.Query("filepath"))
 
-	// read the whole content of file and pass it to file variable, in case of error pass it to err variable
-	file, err := ioutil.ReadFile(fullFilePath)
-	if err != nil {
-		fmt.Printf("Could not read the file due to this %s error \n", err)
+	// get file extension.
+	fileExtension := filepath.Ext(fullFilePath)
+
+	// check if the requested is a backup file with extension bak. If so, then send the actual file format and not the extension. For example alexsmobs.toml.bak --> send ".toml" as the file format.
+	if fileExtension == ".bak" {
+		fileFormat := filepath.Ext(strings.TrimSuffix(filepath.Base(fullFilePath), ".bak"))
+		fileContent, err := utils.FileData(fullFilePath, fileFormat)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, fileContent)
+		return
+	} else {
+		fileContent, err := utils.FileData(fullFilePath, fileExtension)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, fileContent)
+		return
 	}
-	// convert the file binary into a string using string
-	fileContent := string(file)
+}
 
-	c.JSON(200, gin.H{
-		"file_content": fileContent,
-	})
+func SaveFile(c *gin.Context) {
+	// Binding the JSON request body
+	type Body struct {
+		FilePath    string `json:"filepath" binding:"required"`
+		FileContent string `json:"file_content" binding:"required"`
+	}
 
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		// fmt.Println(err) log
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get settings
+	settings := config.GetValues()
+
+	// Set minecraft directory path
+	minecraftDirectory := settings.MinecraftDirectory
+
+	// Set full filepath
+	fullFilePath := fmt.Sprintf("%v%v", minecraftDirectory, body.FilePath)
+
+	// Write to file
+	err = os.WriteFile(fullFilePath, []byte(body.FileContent), 0660)
+	if err != nil {
+		// fmt.Println(err) log
+		c.JSON(400, gin.H{"error": err})
+		return
+	}
+
+	c.Status(200)
 }

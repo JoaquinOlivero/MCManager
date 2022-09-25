@@ -102,20 +102,42 @@
         padding: 5px 8px;
         border-radius: 5px;
       }
+      transition: border-color 150ms;
+      &:hover {
+        border-color: #69b779;
+      }
       svg {
-        fill: #79d0bf;
+        fill: #69b779;
       }
     }
 
     .SingleTabHeader_crud_edit {
+      transition: border-color 150ms;
+      &:hover {
+        border-color: white;
+      }
       svg {
         fill: white;
       }
     }
 
     .SingleTabHeader_crud_remove {
+      transition: border-color 150ms;
+      &:hover {
+        border-color: #f37d79;
+      }
       svg {
         fill: #f37d79;
+      }
+    }
+
+    .SingleTabHeader_crud_save {
+      transition: border-color 150ms;
+      &:hover {
+        border-color: #69b779;
+      }
+      svg {
+        fill: white;
       }
     }
   }

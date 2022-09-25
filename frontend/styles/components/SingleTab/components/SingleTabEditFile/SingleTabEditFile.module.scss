@@ -2,12 +2,4 @@
 @use "../../../../Mixins.scss" as m;
 .SingleTabEditFile {
   height: 100%;
-  .SingleTabEditFile_scrollbar {
-    @include m.scrollbars(
-      none,
-      8px,
-      v.$primary-color,
-      v.$primary-background-color
-    );
-  }
 }
