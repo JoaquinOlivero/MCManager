@@ -74,14 +74,12 @@ const Config: NextPage = () => {
     router.push("/edit")
   };
 
+  // single tab layout
   return (
     <>
-      {currentConfigDir &&
-        // single tab layout
-        <SingleTab header={<SingleTabHeader tabType={"config"} editFile={handleEditFile} selectedFiles={[selectedFile!]} />}>
-          <SingleTabDirectory dir={currentConfigDir} selectedFile={selectedFile} setSelectedFile={setSelectedFile} />
-        </SingleTab>
-      }
+      <SingleTab header={<SingleTabHeader tabType={"config"} editFile={handleEditFile} selectedFiles={[selectedFile!]} />}>
+        <SingleTabDirectory dir={currentConfigDir} selectedFile={selectedFile} setSelectedFile={setSelectedFile} />
+      </SingleTab>
     </>
   );
 };
