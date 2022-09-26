@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import Spinner from '../../../../svg/icons/Spinner';
-// import CodeMirror from '@uiw/react-codemirror';
 import { langs } from '@uiw/codemirror-extensions-langs';
 import styles from '../../../../styles/components/SingleTab/components/SingleTabEditFile/SingleTabEditFile.module.scss'
 import { Extension } from '@codemirror/state';

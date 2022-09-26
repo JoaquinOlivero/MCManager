@@ -61,7 +61,6 @@ const SingleTabDirectory = ({ dir, selectedFile, setSelectedFile }: Props) => {
   }, [sortedData, dir]);
 
   const handleClickOnDir = (name: string) => {
-    // const asPathNestedRoutes = router.asPath.split("/").filter(v => v.length > 0);
     router.push(`${router.asPath}${name}`, undefined, { shallow: true });
   };
 
@@ -75,7 +74,7 @@ const SingleTabDirectory = ({ dir, selectedFile, setSelectedFile }: Props) => {
               sortedData.map((child, i: number) => {
                 return (
                   // prettier-ignore
-                  <div key={child?.name} style={{ borderRight: (i + 1) % 2 === 0 ? "none" : '', backgroundColor: selectedFile && selectedFile === child?.name ? styleVariables.primaryColorLowOpacity : ''}} className={styles.SingleTabDirectory_dir_content} onClick={child?.type === "dir" ? () => { handleClickOnDir(child.name) } : () =>setSelectedFile(child?.name)}>
+                  <div key={child?.name} style={{ borderRight: (i + 1) % 2 === 0 ? "none" : '', backgroundColor: selectedFile && selectedFile === child?.name ? styleVariables.primaryColorLowOpacity : '' }} className={styles.SingleTabDirectory_dir_content} onClick={child?.type === "dir" ? () => { handleClickOnDir(child.name) } : () => setSelectedFile(child?.name)}>
                     {
                       child?.type === "file" ? <File fill="white" /> : <Folder fill={styleVariables.primaryColor} />
                     }

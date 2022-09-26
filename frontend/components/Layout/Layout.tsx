@@ -3,13 +3,20 @@ import { useRouter } from 'next/router'
 import styles from '../../styles/components/Layout/Layout.module.scss'
 import Variables from '../../styles/Variables.module.scss'
 import Gear from '../../svg/icons/Gear'
+import { useDataContext } from "../../contexts/DataContext";
 
 type Props = {
     children: React.ReactNode
 }
 
 const Layout = ({ children }: Props) => {
-    const { route } = useRouter()
+    const { route, push } = useRouter()
+    const { editFilepath, setEditFilepath } = useDataContext()
+
+    const handleClickServerProperties = async () => {
+        await setEditFilepath("/server.properties")
+        push("/edit")
+    }
 
     return (
         <div className={styles.Layout}>
@@ -27,8 +34,11 @@ const Layout = ({ children }: Props) => {
                         </div>
                         <div className={styles.Menu_tab}>
                             <Link href="/config">
-                                <span style={route === "/config" ? { color: Variables.primaryColor } : {}}>Config</span>
+                                <span style={route === "/config/[[...index]]" ? { color: Variables.primaryColor } : {}}>Config</span>
                             </Link>
+                        </div>
+                        <div className={styles.Menu_tab}>
+                            <span style={editFilepath === "/server.properties" ? { color: Variables.primaryColor } : {}} onClick={handleClickServerProperties}>Server.properties</span>
                         </div>
                         {/* <div className={styles.Menu_tab} style={{ pointerEvents: "none" }}>
                             <Link href='/world'>

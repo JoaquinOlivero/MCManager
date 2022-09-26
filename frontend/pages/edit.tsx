@@ -25,12 +25,12 @@ const Edit: NextPage = () => {
         if (editFilepath) getFileContent(editFilepath, setFile, setFileFormat)
 
         return () => {
-            setEditFilepath(null)
+            if (editFilepath === "/server.properties") setEditFilepath(null)
             setFile(null)
             setFileFormat(null)
         }
 
-    }, [])
+    }, [editFilepath])
 
     const saveFile = async () => {
         setUploadStatus({ "uploading": true, "finished": false, "status": false })
