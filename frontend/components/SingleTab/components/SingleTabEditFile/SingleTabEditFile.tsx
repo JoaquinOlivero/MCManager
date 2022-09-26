@@ -15,6 +15,7 @@ type Props = {
 // Lazy load codemirror component
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   suspense: true,
+  ssr: false,
 })
 
 const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
