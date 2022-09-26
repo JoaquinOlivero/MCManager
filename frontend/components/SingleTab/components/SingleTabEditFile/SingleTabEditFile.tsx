@@ -50,18 +50,6 @@ const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
 
   return (
     <div className={styles.SingleTabEditFile} ref={editorContainerRef}>
-      {/* {file && language && editorContainerRef.current ?
-        <CodeMirror
-          value={file}
-          height={editorContainerRef.current!.clientHeight.toString() + "px"}
-          extensions={[language]}
-          onChange={onChange}
-          theme="dark"
-        />
-        :
-        <Spinner />
-      } */}
-
       <Suspense fallback={<Spinner />}>
         {file && language && editorContainerRef.current ?
           <CodeMirror
