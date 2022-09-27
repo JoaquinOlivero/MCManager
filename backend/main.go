@@ -28,16 +28,15 @@ func main() {
 		api.GET("/", handler.GetHomeInfo)
 		api.POST("/", handler.ControlServer)
 
+		dir := api.Group("/dir")
+		{
+			dir.GET("/:name", handler.GetDirectory)
+		}
 		mods := api.Group("/mods")
 		{
 			mods.GET("/", handler.Mods)
 			mods.POST("/upload", handler.UploadMods)
 			mods.POST("/remove", handler.RemoveMods)
-		}
-
-		configFiles := api.Group("/config")
-		{
-			configFiles.GET("/", handler.ConfigFiles)
 		}
 
 		settings := api.Group("/settings")
