@@ -31,6 +31,7 @@ func main() {
 		dir := api.Group("/dir")
 		{
 			dir.GET("/:name", handler.GetDirectory)
+			dir.POST("/remove", handler.RemoveFiles)
 		}
 		mods := api.Group("/mods")
 		{

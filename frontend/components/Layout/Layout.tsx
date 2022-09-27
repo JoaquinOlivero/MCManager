@@ -29,27 +29,27 @@ const Layout = ({ children }: Props) => {
                     <div className={styles.Menu_content_tabs}>
                         <div className={styles.Menu_tab}>
                             <Link href="/mods">
-                                <span style={route === "/mods" ? { color: Variables.primaryColor } : {}}>Mods</span>
+                                <span style={route.includes("mods") ? { color: Variables.primaryColor } : {}}>Mods</span>
                             </Link>
                         </div>
                         <div className={styles.Menu_tab}>
                             <Link href="/config">
-                                <span style={route === "/config/[[...index]]" ? { color: Variables.primaryColor } : {}}>Config</span>
+                                <span style={route.includes("config") ? { color: Variables.primaryColor } : {}}>Config</span>
                             </Link>
                         </div>
                         <div className={styles.Menu_tab}>
                             <span style={editFilepath === "/server.properties" ? { color: Variables.primaryColor } : {}} onClick={handleClickServerProperties}>Server.properties</span>
                         </div>
-                        {/* <div className={styles.Menu_tab} style={{ pointerEvents: "none" }}>
+                        <div className={styles.Menu_tab}>
                             <Link href='/world'>
-                                <span style={route === "/world" ? { color: Variables.primaryColor } : {}}>World</span>
+                                <span style={route.includes("world") ? { color: Variables.primaryColor } : {}}>World</span>
                             </Link>
                         </div>
-                        <div className={styles.Menu_tab} style={{ pointerEvents: "none" }}>
+                        <div className={styles.Menu_tab}>
                             <Link href='/logs'>
-                                <span style={route === "/logs" ? { color: Variables.primaryColor } : {}}>Logs</span>
+                                <span style={route.includes("logs") ? { color: Variables.primaryColor } : {}}>Logs</span>
                             </Link>
-                        </div> */}
+                        </div>
                     </div>
 
                 </div>

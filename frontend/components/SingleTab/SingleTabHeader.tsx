@@ -82,8 +82,8 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
           </div>
         )}
 
-        {tabType === "config" && editFile && (
-          <div className={`${styles.SingleTabHeader_crud_edit} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles && selectedFiles[0] ? 1 : 0.5, cursor: selectedFiles && selectedFiles[0] ? "pointer" : "default", pointerEvents: selectedFiles && selectedFiles[0] ? "visible" : "none" }} onClick={() => editFile()}>
+        {editFile && (
+          <div className={`${styles.SingleTabHeader_crud_edit} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles && selectedFiles.length === 1 && selectedFiles[0] ? 1 : 0.5, cursor: selectedFiles && selectedFiles.length === 1 && selectedFiles[0] ? "pointer" : "default", pointerEvents: selectedFiles && selectedFiles.length === 1 && selectedFiles[0] ? "visible" : "none" }} onClick={() => editFile()}>
             <Edit />
             <span>Edit</span>
           </div>

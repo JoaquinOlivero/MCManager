@@ -25,7 +25,7 @@ const Directory = ({ tabType }: Props) => {
     const router = useRouter();
     const [dirData, setDirData] = useState<DirData | null>(null);
     const [currentDir, setCurrentDir] = useState<DirData | null>(null);
-    const [selectedFile, setSelectedFile] = useState<string | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<Array<string> | null>(null)
     const [worldName, setWorldName] = useState<string | null>(null)
 
     useEffect(() => {
@@ -79,21 +79,40 @@ const Directory = ({ tabType }: Props) => {
 
     // The function handleEditFile() will set the context editFilepath state to the actual path of the file in the World directory, and then push to page "/edit".
     const handleEditFile = async () => {
-        if (router.asPath.includes("world") && worldName) {
-            const filepath = router.asPath.replace("world", worldName) + selectedFile;
+        if (router.asPath.includes("world") && worldName && selectedFiles && selectedFiles.length === 1) {
+            const filepath = router.asPath.replace("world", worldName) + selectedFiles[0];
             await setEditFilepath(filepath)
             return router.push("/edit")
         }
-        const filepath = router.asPath + selectedFile;
+        const filepath = router.asPath + selectedFiles![0];
         await setEditFilepath(filepath)
         return router.push("/edit")
     };
 
+    const handleRemoveFile = async () => {
+        const body = { "files": selectedFiles, "directory": router.asPath }
+
+        if (selectedFiles) {
+            const res = await fetch("/api/dir/remove", {
+                method: "POST",
+                body: JSON.stringify(body)
+            })
+
+            if (res.status === 200) {
+                if (tabType === "world") {
+                    getDir(tabType, setDirData, setWorldName);
+                } else {
+                    getDir(tabType, setDirData);
+                }
+            }
+        }
+    }
+
     // single tab layout
     return (
         <>
-            <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} selectedFiles={[selectedFile!]} />}>
-                <SingleTabDirectory dir={currentDir} selectedFile={selectedFile} setSelectedFile={setSelectedFile} />
+            <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} removeFiles={handleRemoveFile} selectedFiles={selectedFiles} />}>
+                <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} />
             </SingleTab>
         </>
     );
@@ -103,7 +122,7 @@ export default Directory;
 
 // Gets world directory from api. All of the files and subdirectories are recursively nested inside an array. In this case, data.children.
 const getDir = async (tabType: string, setDirData: (value: DirData) => void, setWorldName?: (value: string) => void) => {
-    const res = await fetch("/api/" + tabType);
+    const res = await fetch("/api/dir/" + tabType);
 
     // for world page
     if (setWorldName) {

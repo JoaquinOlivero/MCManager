@@ -36,9 +36,48 @@ func GetDirectory(c *gin.Context) {
 		}
 		c.JSON(200, data)
 		return
+	case "logs":
+		data, err := logsDir(minecraftDirectory)
+		if err != nil {
+			c.JSON(400, err)
+		}
+		c.JSON(200, data)
+		return
 	}
 
 	c.Status(404)
+}
+
+func RemoveFiles(c *gin.Context) {
+	// Binding from JSON
+	type Body struct {
+		FileList  []string `json:"files" binding:"required"`
+		Directory string   `json:"directory" binding:"required"`
+	}
+
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+	}
+	// Get settings
+	settings := config.GetValues()
+
+	// Set minecraft directory path
+	minecraftDirectory := settings.MinecraftDirectory
+
+	// Loop through files and remove them from the directory.
+	for _, file := range body.FileList {
+		filePath := fmt.Sprintf("%v%v%v", minecraftDirectory, body.Directory, file)
+
+		err := os.Remove(filePath)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err})
+		}
+	}
+
+	c.Status(200)
 }
 
 func worldDir(minecraftDirectory string) (interface{}, error) {
@@ -91,6 +130,19 @@ func configDir(minecraftDirectory string) (interface{}, error) {
 	configDir := fmt.Sprintf("%v/config", minecraftDirectory)
 
 	directoryFiles, err := utils.DirectoryTree(configDir)
+	if err != nil {
+		fmt.Println(err) // log
+		return nil, err
+	}
+
+	return directoryFiles, nil
+}
+
+func logsDir(minecraftDirectory string) (interface{}, error) {
+	// Set logs directory
+	logsDir := fmt.Sprintf("%v/logs", minecraftDirectory)
+
+	directoryFiles, err := utils.DirectoryTree(logsDir)
 	if err != nil {
 		fmt.Println(err) // log
 		return nil, err

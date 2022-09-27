@@ -64,7 +64,7 @@ func DirectoryTree(dir string) (result *Node, err error) {
 
 func FileData(fullFilePath, fileFormat string) (map[string]interface{}, error) {
 	// Supported file extensions
-	supportedExtensions := [6]string{".toml", ".json", ".json5", ".properties", ".txt", ".cfg"}
+	supportedExtensions := [7]string{".toml", ".json", ".json5", ".properties", ".txt", ".cfg", ".log"}
 
 	var isSupported bool
 

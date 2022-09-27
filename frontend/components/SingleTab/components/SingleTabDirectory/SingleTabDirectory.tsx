@@ -14,13 +14,14 @@ type ConfigData = {
 
 type Props = {
   dir: ConfigData;
-  selectedFile: string | null;
-  setSelectedFile: Function;
+  selectedFiles: Array<string> | null
+  setSelectedFiles: Function;
 };
 
-const SingleTabDirectory = ({ dir, selectedFile, setSelectedFile }: Props) => {
+const SingleTabDirectory = ({ dir, selectedFiles, setSelectedFiles }: Props) => {
   const router = useRouter();
   const [sortedData, setSortedData] = useState<Array<ConfigData> | null>(null);
+  const [isCtrl, setIsCtrl] = useState<boolean>(false)
 
   // add file info columns
   const headerItems = () => {
@@ -52,17 +53,52 @@ const SingleTabDirectory = ({ dir, selectedFile, setSelectedFile }: Props) => {
 
   useEffect(() => {
     if (dir) {
-      const configSortedData = dir.children?.sort((a: any, b: any) => a.name.localeCompare(b.name));
-      setSortedData(configSortedData!);
+      const dirSortedData = dir.children?.sort((a: any, b: any) => a.name.localeCompare(b.name));
+      setSortedData(dirSortedData!);
     }
     return () => {
-      setSelectedFile(null);
+      setSelectedFiles(null);
     };
   }, [sortedData, dir]);
 
   const handleClickOnDir = (name: string) => {
     router.push(`${router.asPath}${name}`, undefined, { shallow: true });
   };
+
+  // handle click on file.
+  const selectFileClick = (fileName: string) => {
+
+    if (selectedFiles) {
+      const fileExists = !!~selectedFiles.indexOf(fileName)
+
+      // if file clicked already exists in the array, remove it.
+      if (fileExists && isCtrl) {
+        // remove file filename from the array
+        const filteredFiles = selectedFiles.filter(m => m !== fileName)
+        setSelectedFiles(filteredFiles)
+        return
+      }
+      if (isCtrl) return setSelectedFiles((oldArray: Array<string>) => [...oldArray, fileName])
+      if (fileExists && selectedFiles.length === 1) return setSelectedFiles(null)
+    }
+
+    // if ctrl is not pressed, only one file is going to be selected and added to the array of selected files.
+    setSelectedFiles([fileName])
+  }
+
+  // ctrl key event listener, to select multiple files from the list.
+  useEffect(() => {
+    window.addEventListener("keydown", e => {
+      if (e.ctrlKey && !isCtrl) setIsCtrl(true)
+    })
+    window.addEventListener("keyup", e => {
+      if (!e.ctrlKey) setIsCtrl(false)
+    })
+
+    return () => {
+      setSelectedFiles(null)
+    }
+  }, [])
 
   return (
     <>
@@ -74,7 +110,7 @@ const SingleTabDirectory = ({ dir, selectedFile, setSelectedFile }: Props) => {
               sortedData.map((child, i: number) => {
                 return (
                   // prettier-ignore
-                  <div key={child?.name} style={{ borderRight: (i + 1) % 2 === 0 ? "none" : '', backgroundColor: selectedFile && selectedFile === child?.name ? styleVariables.primaryColorLowOpacity : '' }} className={styles.SingleTabDirectory_dir_content} onClick={child?.type === "dir" ? () => { handleClickOnDir(child.name) } : () => setSelectedFile(child?.name)}>
+                  <div key={child?.name} style={{ borderRight: (i + 1) % 2 === 0 ? "none" : '', backgroundColor: selectedFiles && selectedFiles.find(m => m === child?.name) ? styleVariables.primaryColorLowOpacity : '' }} className={styles.SingleTabDirectory_dir_content} onClick={child?.type === "dir" ? () => { handleClickOnDir(child.name) } : () => selectFileClick(child!.name)}>
                     {
                       child?.type === "file" ? <File fill="white" /> : <Folder fill={styleVariables.primaryColor} />
                     }

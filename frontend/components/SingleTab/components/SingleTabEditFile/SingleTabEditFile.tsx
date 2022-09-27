@@ -40,6 +40,7 @@ const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
           break;
         case ".cfg":
         case ".txt":
+        case ".log":
           setLanguage(langs.textile())
           break;
         default:
@@ -47,6 +48,11 @@ const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
       }
     }
   }, [fileFormat])
+
+  useEffect(() => {
+
+  }, [])
+
 
   return (
     <div className={styles.SingleTabEditFile} ref={editorContainerRef}>
