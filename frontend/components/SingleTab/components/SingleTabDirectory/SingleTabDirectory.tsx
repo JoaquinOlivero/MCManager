@@ -61,7 +61,7 @@ const SingleTabDirectory = ({ dir, selectedFiles, setSelectedFiles }: Props) => 
     };
   }, [sortedData, dir]);
 
-  const handleClickOnDir = (name: string) => {
+  const handleDoubleClickOnDir = async (name: string) => {
     router.push(`${router.asPath}${name}`, undefined, { shallow: true });
   };
 
@@ -109,8 +109,7 @@ const SingleTabDirectory = ({ dir, selectedFiles, setSelectedFiles }: Props) => 
             {sortedData &&
               sortedData.map((child, i: number) => {
                 return (
-                  // prettier-ignore
-                  <div key={child?.name} style={{ borderRight: (i + 1) % 2 === 0 ? "none" : '', backgroundColor: selectedFiles && selectedFiles.find(m => m === child?.name) ? styleVariables.primaryColorLowOpacity : '' }} className={styles.SingleTabDirectory_dir_content} onClick={child?.type === "dir" ? () => { handleClickOnDir(child.name) } : () => selectFileClick(child!.name)}>
+                  <div key={child?.name} style={{ borderRight: (i + 1) % 2 === 0 ? "none" : '', backgroundColor: selectedFiles && selectedFiles.find(m => m === child?.name) ? styleVariables.primaryColorLowOpacity : '' }} className={styles.SingleTabDirectory_dir_content} onClick={() => selectFileClick(child!.name)} onDoubleClick={child?.type === "dir" ? () => { handleDoubleClickOnDir(child.name) } : undefined}>
                     {
                       child?.type === "file" ? <File fill="white" /> : <Folder fill={styleVariables.primaryColor} />
                     }

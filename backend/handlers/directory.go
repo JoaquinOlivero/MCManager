@@ -60,6 +60,7 @@ func RemoveFiles(c *gin.Context) {
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
 	// Get settings
 	settings := config.GetValues()
@@ -70,11 +71,25 @@ func RemoveFiles(c *gin.Context) {
 	// Loop through files and remove them from the directory.
 	for _, file := range body.FileList {
 		filePath := fmt.Sprintf("%v%v%v", minecraftDirectory, body.Directory, file)
-
-		err := os.Remove(filePath)
+		fileStat, err := os.Lstat(filePath)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err})
+			fmt.Println(err)
 		}
+
+		if fileStat.IsDir() {
+			err := os.RemoveAll(filePath)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err})
+				break
+			}
+		} else {
+			err := os.Remove(filePath)
+			if err != nil {
+				c.JSON(500, gin.H{"error": err})
+				break
+			}
+		}
+
 	}
 
 	c.Status(200)
