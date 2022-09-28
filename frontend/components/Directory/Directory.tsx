@@ -4,6 +4,7 @@ import SingleTab from "../../components/SingleTab/SingleTab";
 import SingleTabHeader from "../../components/SingleTab/SingleTabHeader";
 import { useRouter } from "next/router";
 import { useDataContext } from "../../contexts/DataContext"
+import ConfirmPrompt from "../Utils/ConfirmPrompt";
 
 type Props = {
     tabType: string
@@ -27,6 +28,7 @@ const Directory = ({ tabType }: Props) => {
     const [currentDir, setCurrentDir] = useState<DirData | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<Array<string> | null>(null)
     const [worldName, setWorldName] = useState<string | null>(null)
+    const [removePrompt, setRemovePrompt] = useState<boolean>(false)
 
     useEffect(() => {
         if (tabType === "world") {
@@ -56,7 +58,6 @@ const Directory = ({ tabType }: Props) => {
                 }
             }
         }
-        return () => { };
     }, [router.asPath]);
 
     // when dirData changes set new current directory.
@@ -90,9 +91,11 @@ const Directory = ({ tabType }: Props) => {
     };
 
     const handleRemoveFile = async () => {
-        const body = { "files": selectedFiles, "directory": router.asPath }
+        setRemovePrompt(true)
 
-        if (selectedFiles) {
+        if (removePrompt && selectedFiles) {
+            const body = { "files": selectedFiles, "directory": router.asPath }
+
             const res = await fetch("/api/dir/remove", {
                 method: "POST",
                 body: JSON.stringify(body)
@@ -104,8 +107,11 @@ const Directory = ({ tabType }: Props) => {
                 } else {
                     getDir(tabType, setDirData);
                 }
+                return setRemovePrompt(false)
             }
+
         }
+
     }
 
     // single tab layout
@@ -113,6 +119,7 @@ const Directory = ({ tabType }: Props) => {
         <>
             <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} removeFiles={handleRemoveFile} selectedFiles={selectedFiles} />}>
                 <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} />
+                {removePrompt && <ConfirmPrompt handleConfirm={handleRemoveFile} handleCancel={() => { setRemovePrompt(false); setSelectedFiles(null) }} />}
             </SingleTab>
         </>
     );
