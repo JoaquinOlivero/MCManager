@@ -3,6 +3,7 @@ import { ChangeEvent, useEffect, useState } from 'react'
 import SingleTabMods from '../components/SingleTab/components/SingleTabMods/SingleTabMods'
 import SingleTab from '../components/SingleTab/SingleTab'
 import SingleTabHeader from '../components/SingleTab/SingleTabHeader'
+import ConfirmPrompt from '../components/Utils/ConfirmPrompt'
 
 type Mod = {
     "fileName": string,
@@ -20,6 +21,7 @@ const Mods: NextPage = () => {
     const [mods, setMods] = useState<Array<Mod> | null>(null)
     const [selectedMods, setSelectedMods] = useState<Array<string> | null>(null)
     const [uploadStatus, setUploadStatus] = useState<UploadStatus>({ "uploading": false, "finished": false, "status": false })
+    const [removePrompt, setRemovePrompt] = useState<boolean>(false)
 
     const uploadMods = async (e: ChangeEvent<HTMLInputElement>) => {
         setUploadStatus({ "uploading": true, "finished": false, "status": false })
@@ -53,18 +55,24 @@ const Mods: NextPage = () => {
     }
 
     const deleteMods = async () => {
-        const body = { "mods": selectedMods }
-        if (selectedMods) {
-            const res = await fetch("/api/mods/remove", {
-                method: "POST",
-                body: JSON.stringify(body)
-            })
+        setRemovePrompt(true)
+        if (removePrompt && selectedMods) {
+            const body = { "mods": selectedMods }
+            if (selectedMods) {
+                const res = await fetch("/api/mods/remove", {
+                    method: "POST",
+                    body: JSON.stringify(body)
+                })
 
-            if (res.status === 200) {
-                getMods(setMods)
+                if (res.status === 200) {
+                    getMods(setMods)
+                    setSelectedMods(null)
+                    return setRemovePrompt(false)
+                }
+                return
             }
-            return
         }
+
         return
     }
 
@@ -81,6 +89,7 @@ const Mods: NextPage = () => {
         // single tab layout
         <SingleTab header={<SingleTabHeader tabType={"mods"} selectedFiles={selectedMods} removeFiles={deleteMods} uploadFiles={uploadMods} uploadStatus={uploadStatus} />}>
             <SingleTabMods mods={mods} selectedMods={selectedMods} setSelectedMods={setSelectedMods} />
+            {removePrompt && <ConfirmPrompt handleConfirm={deleteMods} handleCancel={() => { setRemovePrompt(false); setSelectedMods(null) }} />}
         </SingleTab>
     )
 }
