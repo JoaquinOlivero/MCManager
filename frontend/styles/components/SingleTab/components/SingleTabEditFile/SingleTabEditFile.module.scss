@@ -1,5 +1,6 @@
 @use "../../../../Variables.module.scss" as v;
 @use "../../../../Mixins.scss" as m;
 .SingleTabEditFile {
+  position: relative;
   height: 100%;
 }

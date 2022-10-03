@@ -5,6 +5,7 @@ import File from "../../../../svg/icons/File";
 import Folder from "../../../../svg/icons/Folder";
 import Spinner from "../../../../svg/icons/Spinner";
 import { useRouter } from "next/router";
+import Error from "../../../Utils/Error";
 
 type ConfigData = {
   name: string;
@@ -16,9 +17,10 @@ type Props = {
   dir: ConfigData;
   selectedFiles: Array<string> | null
   setSelectedFiles: Function;
+  error: string | null;
 };
 
-const SingleTabDirectory = ({ dir, selectedFiles, setSelectedFiles }: Props) => {
+const SingleTabDirectory = ({ dir, selectedFiles, setSelectedFiles, error }: Props) => {
   const router = useRouter();
   const [sortedData, setSortedData] = useState<Array<ConfigData> | null>(null);
   const [isCtrl, setIsCtrl] = useState<boolean>(false)
@@ -122,7 +124,13 @@ const SingleTabDirectory = ({ dir, selectedFiles, setSelectedFiles }: Props) => 
           </div>
         </div>
       ) : (
-        <Spinner />
+        <>
+          {error ?
+            <Error message={error} />
+            :
+            <Spinner />
+          }
+        </>
       )}
     </>
   );

@@ -39,7 +39,7 @@ func GetFile(c *gin.Context) {
 	} else {
 		fileContent, err := utils.FileData(fullFilePath, fileExtension)
 		if err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+			c.String(400, err.Error())
 			return
 		}
 

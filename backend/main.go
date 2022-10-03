@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"os"
 
-	// "github.com/gin-contrib/static"
+	"github.com/gin-contrib/static"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +20,7 @@ func main() {
 	r := gin.New()
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.SetTrustedProxies(nil)
-	// r.Use(static.Serve("/", static.LocalFile("../frontend/out/", false)))
+	r.Use(static.Serve("/", static.LocalFile("out/", false)))
 
 	// Setup route group for the API
 	api := r.Group("/api")
@@ -56,15 +56,15 @@ func main() {
 
 	port := os.Getenv("MCMANAGER_HTTP_PROXY_PORT")
 	fmt.Printf("Server started on port: %v\n", port)
-	r.NoRoute(ReverseProxy) //
-	// r.NoRoute(func(c *gin.Context) {
-	// 	c.File("../frontend/out/index.html")
-	// })
+	// r.NoRoute(ReverseProxy) //
+	r.NoRoute(func(c *gin.Context) {
+		c.File("out/index.html")
+	})
 	r.Run(":" + port)
 }
 
 func ReverseProxy(c *gin.Context) {
-	remote, _ := url.Parse("http://localhost:3001")
+	remote, _ := url.Parse("http://localhost:3002")
 	proxy := httputil.NewSingleHostReverseProxy(remote)
 	proxy.Director = func(req *http.Request) {
 		req.Header = c.Request.Header

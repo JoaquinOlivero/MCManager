@@ -5,11 +5,13 @@ import styles from '../../../../styles/components/SingleTab/components/SingleTab
 import { Extension } from '@codemirror/state';
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
+import Error from "../../../Utils/Error";
 
 type Props = {
   file: string | null
   setFile: (value: string | null) => void
   fileFormat: string | null
+  error: string | null
 }
 
 // Lazy load codemirror component
@@ -18,7 +20,7 @@ const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
   ssr: false,
 })
 
-const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
+const SingleTabEditFile = ({ file, setFile, fileFormat, error }: Props) => {
   const [language, setLanguage] = useState<Extension | null>(null)
   const editorContainerRef = useRef<HTMLDivElement>(null)
   const onChange = React.useCallback((value: string) => {
@@ -66,7 +68,13 @@ const SingleTabEditFile = ({ file, setFile, fileFormat }: Props) => {
             theme="dark"
           />
           :
-          <Spinner />
+          <>
+            {error ?
+              <Error message={error} />
+              :
+              <Spinner />
+            }
+          </>
         }
       </Suspense>
     </div>

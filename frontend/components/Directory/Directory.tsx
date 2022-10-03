@@ -29,6 +29,7 @@ const Directory = ({ tabType }: Props) => {
     const [selectedFiles, setSelectedFiles] = useState<Array<string> | null>(null)
     const [worldName, setWorldName] = useState<string | null>(null)
     const [removePrompt, setRemovePrompt] = useState<boolean>(false)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         if (tabType === "world") {
@@ -53,8 +54,9 @@ const Directory = ({ tabType }: Props) => {
                 if (currentDir) {
                     setCurrentDir(currentDir!);
                 } else {
-                    // if directory does not exist redirect to home page.
-                    router.push("/")
+                    // if directory is empty set error.
+                    setError("Directory is empty.")
+                    setCurrentDir(null)
                 }
             }
         }
@@ -71,8 +73,9 @@ const Directory = ({ tabType }: Props) => {
                 if (currentDir) {
                     setCurrentDir(currentDir!);
                 } else {
-                    // if directory does not exist redirect to home page.
-                    router.push("/")
+                    // if directory is empty set error.
+                    setError("Directory is empty.")
+                    setCurrentDir(null)
                 }
             }
         }
@@ -94,7 +97,7 @@ const Directory = ({ tabType }: Props) => {
         setRemovePrompt(true)
 
         if (removePrompt && selectedFiles) {
-            const body = { "files": selectedFiles, "directory": router.asPath }
+            const body = { "files": selectedFiles, "directory": worldName ? router.asPath.replace("world", worldName) : router.asPath }
 
             const res = await fetch("/api/dir/remove", {
                 method: "POST",
@@ -107,18 +110,16 @@ const Directory = ({ tabType }: Props) => {
                 } else {
                     getDir(tabType, setDirData);
                 }
-                return setRemovePrompt(false)
             }
-
+            return setRemovePrompt(false)
         }
-
     }
 
     // single tab layout
     return (
         <>
             <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} removeFiles={handleRemoveFile} selectedFiles={selectedFiles} />}>
-                <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} />
+                <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} error={error} />
                 {removePrompt && <ConfirmPrompt handleConfirm={handleRemoveFile} handleCancel={() => { setRemovePrompt(false); setSelectedFiles(null) }} />}
             </SingleTab>
         </>
