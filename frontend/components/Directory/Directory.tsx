@@ -94,7 +94,7 @@ const Directory = ({ tabType }: Props) => {
     };
 
     const handleRemoveFile = async () => {
-        setRemovePrompt(true)
+        setRemovePrompt(!removePrompt)
 
         if (removePrompt && selectedFiles) {
             const body = { "files": selectedFiles, "directory": worldName ? router.asPath.replace("world", worldName) : router.asPath }
