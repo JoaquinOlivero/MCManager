@@ -29,7 +29,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	github.com/xrjr/mcutils v1.3.2 // indirect
+	github.com/xrjr/mcutils v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect

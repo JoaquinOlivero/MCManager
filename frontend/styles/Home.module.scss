@@ -1,39 +1,41 @@
 @use "./Variables.module.scss" as v;
 
 .Home {
-  width: 100%;
+  margin: 0 auto;
+  width: 85%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 50px;
-  h2 {
+  h1 {
     text-align: center;
-    margin: 0;
-    span {
-      font-size: 20px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
   }
-  .Home_content {
-    // margin-top: 50px;
+  .Home_status {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 50px;
-    .Home_content_players {
-      font-weight: 500;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px v.$primary-background-color solid;
+    .Home_status_title {
+      font-weight: 600;
       letter-spacing: 1px;
-      text-transform: uppercase;
-      font-size: 14px;
       opacity: 0.8;
+      text-transform: uppercase;
+      text-align: center;
     }
 
-    .Home_content_control {
+    .Home_status_server {
+      font-size: 18px;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .Home_status_control {
       display: flex;
+      justify-content: center;
       gap: 20px;
       .Home_control_btn {
         cursor: pointer;
@@ -41,7 +43,6 @@
         align-items: center;
         gap: 5px;
         text-transform: uppercase;
-        font-size: 18px;
         font-weight: 700;
         letter-spacing: 0.6px;
         border: 2px solid v.$primary-background-color;
@@ -51,6 +52,32 @@
         -moz-user-select: none;
         -webkit-user-select: none;
         -ms-user-select: none;
+      }
+    }
+  }
+
+  .Home_content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    .Home_content_ping_data {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      .Home_content_ping_data_item {
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        .Home_content_data_item_title {
+          opacity: 0.95;
+        }
+        .Home_content_data_item_info {
+          opacity: 0.8;
+          font-size: 14px;
+        }
       }
     }
   }

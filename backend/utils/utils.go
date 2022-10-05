@@ -1,11 +1,14 @@
 package utils
 
 import (
+	"MCManager/config"
+	"bufio"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Node represents a node in a directory tree.
@@ -94,4 +97,40 @@ func FileData(fullFilePath, fileFormat string) (map[string]interface{}, error) {
 
 	return m, nil
 
+}
+
+func ServerPropertiesLineValue(key string) (string, error) {
+	settings := config.GetValues()
+	// Open and read server.properties file and retrieve the currrent world name --> level-name=world. The current world name is the name of the directory containing all the world files.
+	serverPropertiesPath := fmt.Sprintf("%v/server.properties", settings.MinecraftDirectory)
+
+	file, err := os.Open(serverPropertiesPath)
+	if err != nil {
+		fmt.Println(err) // log
+		return "", err
+	}
+
+	// Scan file line by line and retrieve the level-name tag.
+	fileScanner := bufio.NewScanner(file)
+	fileScanner.Split(bufio.ScanLines)
+
+	var keyValue string
+
+	for fileScanner.Scan() {
+		line := fileScanner.Text()
+
+		// check if current line is level-name="world"
+		targetFound := strings.Contains(line, key)
+		if targetFound {
+			splitLine := strings.Split(line, "=")
+			keyValue = splitLine[1]
+			break
+		}
+	}
+	if err = file.Close(); err != nil {
+		fmt.Printf("Could not close the file due to this %s error \n", err) // log
+		return "", err
+	}
+
+	return keyValue, nil
 }
