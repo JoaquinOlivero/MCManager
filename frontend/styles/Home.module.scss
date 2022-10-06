@@ -1,4 +1,5 @@
 @use "./Variables.module.scss" as v;
+@use "./Mixins.scss" as m;
 
 .Home {
   margin: 0 auto;
@@ -7,7 +8,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 50px;
+  gap: 25px;
   h1 {
     text-align: center;
   }
@@ -16,8 +17,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    padding-bottom: 20px;
+    gap: 10px;
+    padding-bottom: 25px;
     border-bottom: 2px v.$primary-background-color solid;
     .Home_status_title {
       font-weight: 600;
@@ -60,23 +61,107 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 25px;
 
     .Home_content_ping_data {
       width: 100%;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      padding-bottom: 25px;
+      border-bottom: 2px v.$primary-background-color solid;
+
       .Home_content_ping_data_item {
         text-transform: uppercase;
         letter-spacing: 1.5px;
         font-weight: 600;
+
         .Home_content_data_item_title {
           opacity: 0.95;
         }
+
         .Home_content_data_item_info {
           opacity: 0.8;
           font-size: 14px;
+        }
+
+        ul {
+          max-height: 170px;
+          overflow-y: auto;
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          margin: 5px 0 0 0;
+          @include m.scrollbars(
+            none,
+            8px,
+            v.$primary-color,
+            v.$primary-background-color
+          );
+          li {
+            text-transform: none;
+            margin: 5px 15px 0 15px;
+            opacity: 0.8;
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .Home_content_actions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 25px;
+      border-bottom: 2px v.$primary-background-color solid;
+
+      .Home_content_actions_rcon {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+
+        .Home_content_rcon_title {
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          font-weight: 600;
+          opacity: 0.95;
+        }
+
+        input {
+          border: none;
+          outline: none;
+          height: 25px;
+          width: 250px;
+          border-radius: 5px;
+          padding: 0 5px;
+        }
+
+        .Home_content_rcon_btn {
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          text-transform: uppercase;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          border: 2px solid v.$primary-background-color;
+          padding: 5px 8px;
+          border-radius: 5px;
+          user-select: none;
+          -moz-user-select: none;
+          -webkit-user-select: none;
+          -ms-user-select: none;
+          transition: border-color 150ms;
+          &:hover {
+            border-color: white;
+          }
+        }
+
+        .Home_content_rcon_response {
+          font-size: 14px;
+          opacity: 0.8;
         }
       }
     }

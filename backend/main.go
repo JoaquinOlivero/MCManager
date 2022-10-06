@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
 	"os"
 
 	"github.com/gin-contrib/static"
@@ -27,6 +28,7 @@ func main() {
 	{
 		api.GET("/", handler.GetHomeInfo)
 		api.POST("/", handler.ControlServer)
+		api.POST("/rcon", handler.SendRconCommand)
 
 		dir := api.Group("/dir")
 		{

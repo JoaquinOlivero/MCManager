@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	"github.com/xrjr/mcutils/pkg/ping"
+	"github.com/xrjr/mcutils/pkg/rcon"
 )
 
 func GetHomeInfo(c *gin.Context) {
@@ -20,6 +21,7 @@ func GetHomeInfo(c *gin.Context) {
 		DockerHealth string     `json:"docker_health"`
 		RconEnabled  bool       `json:"rcon_enabled"`
 		RconPort     string     `json:"rcon_port"`
+		RconPassword string     `json:"rcon_password"`
 		Ping         ping.Infos `json:"ping_data"`
 	}
 	// Get settings
@@ -73,7 +75,7 @@ func GetHomeInfo(c *gin.Context) {
 		// Set the data pinged into "serverInfo" variable.
 		serverInfo.Ping = hs.Properties.Infos()
 
-		// Check server.properties lines for "enable-rcon" and "rcon.port" keys and set their values in "serverInfo" variable.
+		// Check server.properties lines for "enable-rcon", "rcon.port" and "rcon.password" keys and set their values in "serverInfo" variable.
 		rcon, err := utils.ServerPropertiesLineValue("enable-rcon")
 		if err != nil {
 			c.JSON(500, err)
@@ -86,6 +88,12 @@ func GetHomeInfo(c *gin.Context) {
 			return
 		}
 
+		rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
+		if err != nil {
+			c.JSON(500, err)
+			return
+		}
+
 		rconBool, err := strconv.ParseBool(rcon)
 		if err != nil {
 			c.JSON(500, err)
@@ -93,6 +101,7 @@ func GetHomeInfo(c *gin.Context) {
 		}
 		serverInfo.RconEnabled = rconBool
 		serverInfo.RconPort = rconPort
+		serverInfo.RconPassword = rconPassword
 	}
 
 	c.JSON(200, serverInfo)
@@ -123,6 +132,31 @@ func ControlServer(c *gin.Context) {
 		}
 
 	}
+}
+
+func SendRconCommand(c *gin.Context) {
+	type Body struct {
+		Command  string `json:"rcon_command" binding:"required"`
+		Password string `json:"rcon_password" binding:"required"`
+		Port     int    `json:"rcon_port" binding:"required"`
+	}
+
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.String(400, err.Error())
+	}
+
+	// Get settings
+	settings := config.GetValues()
+
+	rconResponse, err := rcon.Rcon(settings.MinecraftServerIp, body.Port, body.Password, body.Command)
+	if err != nil {
+		c.String(400, err.Error())
+	}
+
+	c.String(200, rconResponse)
 }
 
 func startDockerContainer(settings config.Config) (int, error) {
