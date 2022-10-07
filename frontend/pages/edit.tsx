@@ -82,6 +82,11 @@ const getFileContent = async (editFilepath: string, setFile: (value: string | nu
                 return res.json().then(data => {
                     setFile(data.file_content)
                     setFileFormat(data.file_format)
+                    if (data.file_format === ".log") {
+                        setTimeout(() => {
+                            getFileContent(editFilepath, setFile, setFileFormat, setError)
+                        }, 1000);
+                    }
                 })
             }
         })

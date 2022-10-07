@@ -22,6 +22,7 @@ const CodeMirror = dynamic(() => import('@uiw/react-codemirror'), {
 
 const SingleTabEditFile = ({ file, setFile, fileFormat, error }: Props) => {
   const [language, setLanguage] = useState<Extension | null>(null)
+  const [editable, setEditable] = useState<boolean>(true)
   const editorContainerRef = useRef<HTMLDivElement>(null)
   const onChange = React.useCallback((value: string) => {
     setFile(value)
@@ -43,6 +44,7 @@ const SingleTabEditFile = ({ file, setFile, fileFormat, error }: Props) => {
         case ".cfg":
         case ".txt":
         case ".log":
+          setEditable(false)
           setLanguage(langs.textile())
           break;
         default:
@@ -50,11 +52,6 @@ const SingleTabEditFile = ({ file, setFile, fileFormat, error }: Props) => {
       }
     }
   }, [fileFormat])
-
-  useEffect(() => {
-
-  }, [])
-
 
   return (
     <div className={styles.SingleTabEditFile} ref={editorContainerRef}>
@@ -66,6 +63,7 @@ const SingleTabEditFile = ({ file, setFile, fileFormat, error }: Props) => {
             extensions={[language]}
             onChange={onChange}
             theme="dark"
+            editable={editable}
           />
           :
           <>
