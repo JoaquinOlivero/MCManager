@@ -54,7 +54,7 @@ func GetHomeInfo(c *gin.Context) {
 	cli.Close() // Close connection to docker container.
 
 	// If the docker container is running ping the minecraft server to get data back from it.
-	if serverInfo.DockerStatus == "running" {
+	if serverInfo.DockerStatus == "running" && serverInfo.DockerHealth == "healthy" {
 		pingclient := ping.NewClient(settings.MinecraftServerIp, 25565)
 
 		// Connect opens the connection, and can raise an error for example if the server is unreachable

@@ -45,11 +45,19 @@ const Home: NextPage = () => {
         setIsStarting(true)
         setIsLoading(false)
         return setTimeout(async () => await getHomeData(), 5000)
+      } else if (data.docker_status === "running" && data.docker_health === "healthy") {
+        setServerInfo(data)
+        setIsStarting(false)
+        return setIsLoading(false)
+      } else if (data.docker_status === "running" && data.docker_health === "unhealthy") {
+        setIsStarting(true)
+        setIsLoading(false)
+        return setTimeout(async () => await getHomeData(), 5000)
       }
-
-      setServerInfo(data)
       setIsStarting(false)
-      return setIsLoading(false)
+      setIsLoading(false)
+      setServerInfo(null)
+      return
     } else {
       setServerInfo(null)
       setIsStarting(false)
@@ -137,7 +145,7 @@ const Home: NextPage = () => {
   return (
     <SingleTab header={<SingleTabHeader tabType={"home"} />}>
       {!isLoading ?
-        serverInfo && serverInfo.docker_status === "running" ?
+        serverInfo && serverInfo.docker_status === "running" && serverInfo.docker_health === "healthy" ?
           <div className={styles.Home}>
 
             {/* MOTD */}
