@@ -24,6 +24,7 @@ import (
 func GetHomeInfo(c *gin.Context) {
 
 	type ServerInfo struct {
+		RunMethod    string     `json:"run_method"`
 		DockerStatus string     `json:"docker_status"`
 		DockerHealth string     `json:"docker_health"`
 		RconEnabled  bool       `json:"rcon_enabled"`
@@ -33,6 +34,11 @@ func GetHomeInfo(c *gin.Context) {
 	}
 	// Get settings
 	settings := config.GetValues()
+
+	// Initialization of server info variable
+	var serverInfo ServerInfo
+	// Set running method
+	serverInfo.RunMethod = settings.RunMethod
 
 	// connect to docker container and get required info about the container.
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -47,7 +53,6 @@ func GetHomeInfo(c *gin.Context) {
 	}
 
 	// Set the docker container's status and health into "serverInfo" variable.
-	var serverInfo ServerInfo
 	serverInfo.DockerStatus = containerInfo.State.Status
 	serverInfo.DockerHealth = containerInfo.State.Health.Status
 
@@ -257,12 +262,17 @@ func Backup(c *gin.Context) {
 	// Time it took to compress all files.
 	t := time.Now()
 	elapsed := t.Sub(timeStart)
-	fmt.Printf("Backup is ready. Compressing all the files took: %v\n", elapsed/1000)
+	fmt.Printf("Backup is ready to be sent. Compressing all the files took: %v\n", elapsed)
 
-	// Set HTTP headers.
-	c.Header("Content-Type", c.GetHeader("Content-Type"))
-	c.Header("Content-Disposition", "attachment; filename="+filename)
-	c.File(filename)
+	// Anonymous function encapsulating c.File() that sends the backup file, so that c.File() doesn't end the execution of the function. Thus, allowing the handler function to continue executing and remove the temporary backup file already downloaded by the user.
+	func(c *gin.Context) {
+		// Set HTTP headers.
+		c.Header("Content-Type", c.GetHeader("Content-Type"))
+		c.Header("Content-Disposition", "attachment; fileholder="+filename)
+		c.File(filename)
+	}(c)
+
+	// Remove temporary backup file created.
 	os.Remove(filename)
 }
 
