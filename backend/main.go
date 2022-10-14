@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MCManager/config"
 	handler "MCManager/handlers"
 
 	"fmt"
@@ -12,13 +13,18 @@ import (
 
 	"github.com/gin-contrib/static"
 
+	helmet "github.com/danielkov/gin-helmet"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	config.GetValues()
+
 	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", "5000")
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(helmet.Default())
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.SetTrustedProxies(nil)
 	r.Use(static.Serve("/", static.LocalFile("out/", false)))
@@ -29,6 +35,7 @@ func main() {
 		api.GET("/", handler.GetHomeInfo)
 		api.POST("/", handler.ControlServer)
 		api.POST("/rcon", handler.SendRconCommand)
+		api.GET("/backup", handler.Backup)
 
 		dir := api.Group("/dir")
 		{
@@ -57,8 +64,9 @@ func main() {
 	}
 
 	port := os.Getenv("MCMANAGER_HTTP_PROXY_PORT")
+	// port := "5001"
 	fmt.Printf("Server started on port: %v\n", port)
-	// r.NoRoute(ReverseProxy) //
+	// r.NoRoute(ReverseProxy)
 	r.NoRoute(func(c *gin.Context) {
 		c.File("out/index.html")
 	})
