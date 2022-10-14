@@ -5,8 +5,10 @@ import SingleTabHeader from '../components/SingleTab/SingleTabHeader'
 import styles from '../styles/Home.module.scss'
 import Spinner from '../svg/icons/Spinner'
 import { useRouter } from "next/router";
+import Link from 'next/link'
 
 type Data = {
+  run_method: string
   docker_status: string
   docker_health: string
   rcon_enabled: boolean
@@ -29,35 +31,49 @@ type Data = {
 
 const Home: NextPage = () => {
   const router = useRouter();
+  const [settings, setSettings] = useState<boolean>(false)
   const [serverInfo, setServerInfo] = useState<Data | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isStopping, setIsStopping] = useState<boolean>(false)
   const [isStarting, setIsStarting] = useState<boolean>(false)
   const [rconValue, setRconValue] = useState<string>("")
   const [rconResponse, setRconResponse] = useState<string | null>(null)
+  const [backupMsg, setBackupMsg] = useState<string | null>(null)
 
   const getHomeData: Function = async () => {
     const res = await fetch("/api")
 
     if (res.status === 200) {
       const data: Data = await res.json()
-      if (data.docker_status === "running" && data.docker_health === "starting") {
-        setIsStarting(true)
-        setIsLoading(false)
-        return setTimeout(async () => await getHomeData(), 5000)
-      } else if (data.docker_status === "running" && data.docker_health === "healthy") {
-        setServerInfo(data)
-        setIsStarting(false)
-        return setIsLoading(false)
-      } else if (data.docker_status === "running" && data.docker_health === "unhealthy") {
-        setIsStarting(true)
-        setIsLoading(false)
-        return setTimeout(async () => await getHomeData(), 5000)
+
+      // Check that config.json "run_method" (response from fetch) is not empty.
+      if (data.run_method && data.run_method !== "") {
+        setSettings(true)
       }
-      setIsStarting(false)
-      setIsLoading(false)
-      setServerInfo(null)
-      return
+
+      // Docker 
+      if (data.run_method === "docker") {
+        if (data.docker_status === "running" && data.docker_health === "starting") {
+          setIsStarting(true)
+          setIsLoading(false)
+          return setTimeout(async () => await getHomeData(), 5000)
+        } else if (data.docker_status === "running" && data.docker_health === "healthy") {
+          setServerInfo(data)
+          setIsStarting(false)
+          return setIsLoading(false)
+        } else if (data.docker_status === "running" && data.docker_health === "unhealthy") {
+          setIsStarting(true)
+          setIsLoading(false)
+          return setTimeout(async () => await getHomeData(), 5000)
+        }
+        setIsStarting(false)
+        setIsLoading(false)
+        setServerInfo(null)
+        return
+      } else if (data.run_method === "script") {
+        return
+      }
+
     } else {
       setServerInfo(null)
       setIsStarting(false)
@@ -128,6 +144,41 @@ const Home: NextPage = () => {
       });
   }
 
+  const handleDownloadBackup = async () => {
+    // Update backup message state.
+    setBackupMsg("Preparing backup. This may take a while...")
+
+    // initialize variable to set filename from content-disposition header.
+    let filename = '';
+
+    fetch("/api/backup").then(res => {
+      const disposition = res.headers.get('Content-Disposition');
+      filename = disposition!.split(/;(.+)/)[1].split(/=(.+)/)[1];
+      if (filename.toLowerCase().startsWith("utf-8''"))
+        filename = decodeURIComponent(filename.replace("utf-8''", ''));
+      else
+        filename = filename.replace(/['"]/g, '');
+      return res.blob();
+
+    }).then(blob => {
+
+      var url = window.URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a); // append the element to the dom
+      a.click();
+      a.remove(); // afterwards, remove the element  
+
+      // Set states back to default values.
+      return setBackupMsg(null)
+
+    }).catch(err => {
+      console.log(err)
+    })
+
+  }
+
   useEffect(() => {
     const asPathNestedRoutes = router.asPath.split("/").filter((v) => v.length > 0);
     if (asPathNestedRoutes.length > 0) {
@@ -145,7 +196,7 @@ const Home: NextPage = () => {
   return (
     <SingleTab header={<SingleTabHeader tabType={"home"} />}>
       {!isLoading ?
-        serverInfo && serverInfo.docker_status === "running" && serverInfo.docker_health === "healthy" ?
+        serverInfo && settings ?
           <div className={styles.Home}>
 
             {/* MOTD */}
@@ -207,22 +258,38 @@ const Home: NextPage = () => {
                       </div>}
                   </div>
                 }
+
+                {/* Backup */}
+                <div className={styles.Home_content_actions_backup}>
+                  <span className={styles.Home_content_backup_title}>Backup</span>
+                  <div className={styles.Home_content_backup_btn} onClick={handleDownloadBackup}>Download</div>
+                  {backupMsg && <div className={styles.Home_content_backup_message}>
+                    {backupMsg} <div className={styles.Home_content_backup_message_spinner}></div>
+                  </div>}
+                </div>
               </div>
             </div>
           </div>
           :
-          <div className={styles.Home} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          settings ?
+            <div className={styles.Home} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
 
-            <div className={styles.Home_status} style={{ borderBottom: "none" }}>
-              <div><span className={styles.Home_status_title}>Server Status: </span><span className={styles.Home_status_server} style={{ color: "rgba(255, 60, 60, 1)", textShadow: "rgba(255, 60, 60, 0.5) 0px 0px 4px" }}>Offline</span></div>
-              <div className={styles.Home_status_control}>
-                <div className={styles.Home_control_btn} style={{ borderColor: "#79d0bf", pointerEvents: isStarting ? "none" : "auto", opacity: isStarting ? 0.5 : 1 }} onClick={handleServerStart}>
-                  {isStarting ? "Starting" : "Start"}
+              <div className={styles.Home_status} style={{ borderBottom: "none" }}>
+                <div><span className={styles.Home_status_title}>Server Status: </span><span className={styles.Home_status_server} style={{ color: "rgba(255, 60, 60, 1)", textShadow: "rgba(255, 60, 60, 0.5) 0px 0px 4px" }}>Offline</span></div>
+                <div className={styles.Home_status_control}>
+                  <div className={styles.Home_control_btn} style={{ borderColor: "#79d0bf", pointerEvents: isStarting ? "none" : "auto", opacity: isStarting ? 0.5 : 1 }} onClick={handleServerStart}>
+                    {isStarting ? "Starting" : "Start"}
+                  </div>
                 </div>
               </div>
-            </div>
 
-          </div>
+            </div>
+            :
+            <div className={styles.Home}>
+              <div className={styles.Home_settings}>
+                Please configure your MCManager <Link href="/settings" >settings</Link>.
+              </div>
+            </div>
         :
         <Spinner />
       }
