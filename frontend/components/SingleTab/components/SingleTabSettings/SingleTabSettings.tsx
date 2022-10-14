@@ -37,29 +37,6 @@ const SingleTabSettings = ({ settings, dockerContainers, getSettings }: Props) =
                             </div>
                         </div> */}
             <Docker settings={settings} dockerContainers={dockerContainers} getSettings={getSettings} />
-            {/* <div className={styles.SingleTabSettings_option_content}>
-                            <div className={styles.SingleTabSettings_content_title}>
-                                Docker Container
-                            </div>
-                            <select name="" id="" onChange={(e) => setDockerContainerOption(e.target.value)} value={settings.run_method === "docker" ? settings.docker_container_id : dockerContainerOption}>
-                                <option value="default" disabled hidden>Select Container</option>
-                                {dockerContainers ?
-                                    dockerContainers.map((container: DockerContainer) => {
-                                        return <option key={container.container_id} value={container.container_id}>{container.container_name.substring(1)}</option>
-                                    })
-                                    :
-                                    <option value="not-found">No docker container found</option>
-                                }
-                            </select>
-                            <div className={styles.SingleTabSettings_btn_connect} onClick={handleConnectDockerContainer} style={settings.run_method === "docker" ? { pointerEvents: "none", opacity: 0.5 } : {}}>
-                                <span>{isConnecting ? "Connecting" : settings.run_method !== '' ? "Connected" : "Connect"}</span>
-                            </div>
-                            {settings.run_method === "docker" &&
-                                <div className={styles.SingleTabSettings_btn_connect} onClick={handleDisconnectDockerContainer}>
-                                    <span>Disconnect</span>
-                                </div>
-                            }
-                        </div> */}
           </div>
         </div>
       ) : (
