@@ -4,6 +4,7 @@
 # Backend
 /backend/dockerresponse.json
 /backend/tmp/
+/backend/config.json
 
 
 # Frontend
