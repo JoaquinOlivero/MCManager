@@ -18,8 +18,8 @@ type Config struct {
 	MinecraftServerIp  string        `json:"minecraft_server_ip"`
 	RunMethod          string        `json:"run_method"`
 	DockerContainerId  string        `json:"docker_container_id"`
-	StartScript        string        `json:"start_script"`
-	StopScript         string        `json:"stop_script"`
+	StartCommand       string        `json:"start_command"`
+	Pid                int           `json:"server_pid"`
 	Backup             BackupOptions `json:"backup"`
 }
 

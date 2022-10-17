@@ -5,13 +5,19 @@ import (
 	"MCManager/utils"
 	"archive/zip"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
+	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -132,17 +138,25 @@ func ControlServer(c *gin.Context) {
 		case "start":
 			res, err := startDockerContainer(settings)
 			if err != nil {
-				c.JSON(500, err)
+				c.JSON(res, err)
 			}
 			c.Status(res)
 		case "stop":
 			res, err := stopDockerContainer(settings)
 			if err != nil {
-				c.JSON(500, err)
+				c.JSON(res, err)
 			}
 			c.Status(res)
 		}
-
+	case "command":
+		switch action {
+		case "start":
+			res, err := startCommand(settings)
+			if err != nil {
+				c.JSON(res, err.Error())
+			}
+			c.Status(res)
+		}
 	}
 }
 
@@ -303,5 +317,52 @@ func stopDockerContainer(settings config.Config) (int, error) {
 		fmt.Println(err)
 	}
 	cli.Close()
+	return 200, nil
+}
+
+func startCommand(settings config.Config) (int, error) {
+
+	// Check if the server process is already running.
+	process, err := os.FindProcess(settings.Pid)
+	if err != nil {
+		log.Printf("Failed to find process: %s\n", err)
+	} else {
+		err := process.Signal(syscall.Signal(0))
+		if err == nil {
+			err = errors.New("server is already running")
+			return 400, err
+		}
+	}
+
+	// Get start command from settings and split it.
+	args := strings.Split(settings.StartCommand, " ")
+
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Dir = settings.MinecraftDirectory
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+		Pgid:    0,
+	}
+
+	// Execute the command and start the new process
+	if err := cmd.Start(); err != nil {
+		log.Println(err)
+		return 400, err
+	}
+
+	// Save the process id to settings.
+	settings.Pid = cmd.Process.Pid // new process id.
+
+	newSettings, err := json.Marshal(settings)
+	if err != nil {
+		log.Println(err)
+		return 500, err
+	}
+	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	if err != nil {
+		log.Println(err)
+		return 500, err
+	}
+
 	return 200, nil
 }
