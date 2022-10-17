@@ -5,6 +5,7 @@ import SingleTabHeader from "../../components/SingleTab/SingleTabHeader";
 import { useRouter } from "next/router";
 import { useDataContext } from "../../contexts/DataContext"
 import ConfirmPrompt from "../Utils/ConfirmPrompt";
+import NoSettingsError from "../Utils/NoSettingsError";
 
 type Props = {
     tabType: string
@@ -24,6 +25,7 @@ type WorldData = {
 const Directory = ({ tabType }: Props) => {
     const { setEditFilepath } = useDataContext()
     const router = useRouter();
+    const [settings, setSettings] = useState<boolean>(true)
     const [dirData, setDirData] = useState<DirData | null>(null);
     const [currentDir, setCurrentDir] = useState<DirData | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<Array<string> | null>(null)
@@ -33,9 +35,9 @@ const Directory = ({ tabType }: Props) => {
 
     useEffect(() => {
         if (tabType === "world") {
-            getDir(tabType, setDirData, setWorldName);
+            getDir(tabType, setDirData, setSettings, setWorldName);
         } else {
-            getDir(tabType, setDirData);
+            getDir(tabType, setDirData, setSettings);
         }
 
         return () => {
@@ -106,9 +108,9 @@ const Directory = ({ tabType }: Props) => {
 
             if (res.status === 200) {
                 if (tabType === "world") {
-                    getDir(tabType, setDirData, setWorldName);
+                    getDir(tabType, setDirData, setSettings, setWorldName);
                 } else {
-                    getDir(tabType, setDirData);
+                    getDir(tabType, setDirData, setSettings);
                 }
             }
             return setRemovePrompt(false)
@@ -119,8 +121,14 @@ const Directory = ({ tabType }: Props) => {
     return (
         <>
             <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} removeFiles={handleRemoveFile} selectedFiles={selectedFiles} />}>
-                <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} error={error} />
-                {removePrompt && <ConfirmPrompt handleConfirm={handleRemoveFile} handleCancel={() => { setRemovePrompt(false); setSelectedFiles(null) }} />}
+                {settings ?
+                    <>
+                        <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} error={error} />
+                        {removePrompt && <ConfirmPrompt handleConfirm={handleRemoveFile} handleCancel={() => { setRemovePrompt(false); setSelectedFiles(null) }} />}
+                    </>
+                    :
+                    <NoSettingsError />
+                }
             </SingleTab>
         </>
     );
@@ -128,31 +136,36 @@ const Directory = ({ tabType }: Props) => {
 
 export default Directory;
 
-// Gets world directory from api. All of the files and subdirectories are recursively nested inside an array. In this case, data.children.
-const getDir = async (tabType: string, setDirData: (value: DirData) => void, setWorldName?: (value: string) => void) => {
-    const res = await fetch("/api/dir/" + tabType);
+// Gets directory from api. All of the files and subdirectories are recursively nested inside an array. In this case, data.children.
+const getDir = async (tabType: string, setDirData: (value: DirData) => void, setSettings: (value: boolean) => void, setWorldName?: (value: string) => void) => {
 
-    // for world page
-    if (setWorldName) {
-        const data: WorldData = await res.json();
-
-        if (res.status === 200 && data) {
-            await setDirData(data.dir);
-            await setWorldName(data.world_name);
-            return
+    fetch("/api/dir/" + tabType).then(res => {
+        if (!res.ok) {
+            return res.text().then(text => { throw new Error(text) })
         }
-    } else {
-        // For all other pages that have directories, e.g: /config and /logs.
-        const data: DirData = await res.json();
+        else {
+            return res.json().then((json) => {
+                // for world page
+                if (setWorldName) {
+                    const data: WorldData = json;
 
-        if (res.status === 200 && data && data.children) {
-            await setDirData(data);
-            return
+                    setDirData(data.dir);
+                    setWorldName(data.world_name);
+                    return
+                } else {
+                    const data: DirData = json;
+                    setDirData(data);
+                }
+            })
         }
-    }
+    }).catch(err => {
+        if (err.message.includes("no such file or directory")) {
+            setSettings(false)
+        }
+    });
 };
 
-// Returns all files and subdirectories of a root node directory. This function is used in this component to access a subdirectory of minecraft's config root directory.
+// Returns all files and subdirectories of a node directory.
 const getCurrentDir: any = (root: DirData, nestedPaths: Array<string>) => {
     const totalRoutes = nestedPaths.length;
     const lastSlug = nestedPaths[totalRoutes - 1];

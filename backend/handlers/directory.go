@@ -4,6 +4,7 @@ import (
 	"MCManager/config"
 	"MCManager/utils"
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -25,21 +26,21 @@ func GetDirectory(c *gin.Context) {
 	case "world":
 		data, err := worldDir(minecraftDirectory)
 		if err != nil {
-			c.JSON(400, err)
+			c.String(400, err.Error())
 		}
 		c.JSON(200, data)
 		return
 	case "config":
 		data, err := configDir(minecraftDirectory)
 		if err != nil {
-			c.JSON(400, err)
+			c.String(400, err.Error())
 		}
 		c.JSON(200, data)
 		return
 	case "logs":
 		data, err := logsDir(minecraftDirectory)
 		if err != nil {
-			c.JSON(400, err)
+			c.String(400, err.Error())
 		}
 		c.JSON(200, data)
 		return
@@ -102,6 +103,11 @@ func worldDir(minecraftDirectory string) (interface{}, error) {
 
 	file, err := os.Open(serverPropertiesPath)
 	if err != nil {
+		// Check if server.properties file exists.
+		noFile := os.IsNotExist(err)
+		if noFile {
+			err = errors.New("no such file or directory")
+		}
 		fmt.Println(err) // log
 		return nil, err
 	}

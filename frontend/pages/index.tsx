@@ -6,6 +6,7 @@ import styles from '../styles/Home.module.scss'
 import Spinner from '../svg/icons/Spinner'
 import { useRouter } from "next/router";
 import Link from 'next/link'
+import NoSettingsError from '../components/Utils/NoSettingsError'
 
 type Data = {
   run_method: string
@@ -285,11 +286,7 @@ const Home: NextPage = () => {
 
             </div>
             :
-            <div className={styles.Home}>
-              <div className={styles.Home_settings}>
-                Please configure your MCManager <Link href="/settings" >settings</Link>.
-              </div>
-            </div>
+            <NoSettingsError />
         :
         <Spinner />
       }

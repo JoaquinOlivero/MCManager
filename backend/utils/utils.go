@@ -84,6 +84,11 @@ func FileData(fullFilePath, fileFormat string) (map[string]interface{}, error) {
 
 	file, err := os.ReadFile(fullFilePath)
 	if err != nil {
+		// Check if file does not exist.
+		noFile := os.IsNotExist(err)
+		if noFile {
+			err = errors.New("no such file or directory")
+		}
 		return nil, err
 	}
 

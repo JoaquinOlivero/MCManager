@@ -6,13 +6,21 @@ import (
 	"os"
 )
 
+type BackupOptions struct {
+	World            bool `json:"world"`
+	Mods             bool `json:"mods"`
+	Config           bool `json:"config"`
+	ServerProperties bool `json:"server_properties"`
+}
+
 type Config struct {
-	MinecraftDirectory string `json:"minecraft_directory"`
-	MinecraftServerIp  string `json:"minecraft_server_ip"`
-	RunMethod          string `json:"run_method"`
-	DockerContainerId  string `json:"docker_container_id"`
-	StartScript        string `json:"start_script"`
-	StopScript         string `json:"stop_script"`
+	MinecraftDirectory string        `json:"minecraft_directory"`
+	MinecraftServerIp  string        `json:"minecraft_server_ip"`
+	RunMethod          string        `json:"run_method"`
+	DockerContainerId  string        `json:"docker_container_id"`
+	StartScript        string        `json:"start_script"`
+	StopScript         string        `json:"stop_script"`
+	Backup             BackupOptions `json:"backup"`
 }
 
 func GetValues() Config {
@@ -25,8 +33,15 @@ func GetValues() Config {
 
 		noConfigFile := os.IsNotExist(err)
 		if noConfigFile {
-			fmt.Println("Creating config.json file")
-			// Marshall config struct into json []byte
+			fmt.Println("Creating config.json file and setting default values")
+
+			// Set default config values.
+			config.Backup.World = true
+			config.Backup.Mods = true
+			config.Backup.Config = true
+			config.Backup.ServerProperties = true
+
+			// Marshall config struct into json []byte.
 			jsonConfig, _ := json.Marshal(config)
 			err := os.WriteFile("./config.json", jsonConfig, 0666)
 			if err != nil {

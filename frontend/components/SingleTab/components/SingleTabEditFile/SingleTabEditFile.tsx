@@ -6,6 +6,7 @@ import { Extension } from '@codemirror/state';
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 import Error from "../../../Utils/Error";
+import NoSettingsError from "../../../Utils/NoSettingsError";
 
 type Props = {
   file: string | null
@@ -68,7 +69,13 @@ const SingleTabEditFile = ({ file, setFile, fileFormat, error }: Props) => {
           :
           <>
             {error ?
-              <Error message={error} />
+              <>
+                {error.includes("no such file or directory") ?
+                  <NoSettingsError />
+                  :
+                  <Error message={error} />
+                }
+              </>
               :
               <Spinner />
             }
