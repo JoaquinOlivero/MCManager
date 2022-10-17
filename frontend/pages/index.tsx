@@ -12,6 +12,8 @@ type Data = {
   run_method: string
   docker_status: string
   docker_health: string
+  start_command: string
+  command_status: string
   rcon_enabled: boolean
   rcon_port: string
   rcon_password: string
@@ -52,7 +54,7 @@ const Home: NextPage = () => {
         setSettings(true)
       }
 
-      // Docker 
+      // When the minecraft server runs in a docker container.
       if (data.run_method === "docker") {
         if (data.docker_status === "running" && data.docker_health === "starting") {
           setIsStarting(true)
@@ -71,7 +73,26 @@ const Home: NextPage = () => {
         setIsLoading(false)
         setServerInfo(null)
         return
-      } else if (data.run_method === "script") {
+      }
+
+      // When the minecraft server runs bare bones with a command.
+      if (data.run_method === "command") {
+        if (data.command_status === "starting") {
+          setIsStarting(true)
+          setIsLoading(false)
+          return setTimeout(async () => await getHomeData(), 5000)
+        } else if (data.command_status === "online") {
+          console.log(data)
+          if (data.ping_data.version.name === "") {
+            return setTimeout(async () => await getHomeData(), 5000)
+          }
+          setServerInfo(data)
+          setIsStarting(false)
+          return setIsLoading(false)
+        }
+        setIsStarting(false)
+        setIsLoading(false)
+        setServerInfo(null)
         return
       }
 
@@ -87,7 +108,7 @@ const Home: NextPage = () => {
   const handleServerStart = async () => {
     setIsStarting(true)
     try {
-      const res = await fetch("/api?action=start&method=docker", {
+      const res = await fetch("/api?action=start", {
         method: "POST"
       })
       if (res.status === 200) {
@@ -102,7 +123,7 @@ const Home: NextPage = () => {
   const handleServerStop = async () => {
     setIsStopping(true)
     try {
-      const res = await fetch("/api?action=stop&method=docker", {
+      const res = await fetch("/api?action=stop", {
         method: "POST"
       })
 

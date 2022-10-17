@@ -27,17 +27,20 @@ import (
 	"github.com/xrjr/mcutils/pkg/rcon"
 )
 
+type ServerInfo struct {
+	RunMethod     string     `json:"run_method"`
+	DockerStatus  string     `json:"docker_status"`
+	DockerHealth  string     `json:"docker_health"`
+	StartCommand  string     `json:"start_command"`
+	CommandStatus string     `json:"command_status"`
+	RconEnabled   bool       `json:"rcon_enabled"`
+	RconPort      string     `json:"rcon_port"`
+	RconPassword  string     `json:"rcon_password"`
+	Ping          ping.Infos `json:"ping_data"`
+}
+
 func GetHomeInfo(c *gin.Context) {
 
-	type ServerInfo struct {
-		RunMethod    string     `json:"run_method"`
-		DockerStatus string     `json:"docker_status"`
-		DockerHealth string     `json:"docker_health"`
-		RconEnabled  bool       `json:"rcon_enabled"`
-		RconPort     string     `json:"rcon_port"`
-		RconPassword string     `json:"rcon_password"`
-		Ping         ping.Infos `json:"ping_data"`
-	}
 	// Get settings
 	settings := config.GetValues()
 
@@ -46,83 +49,21 @@ func GetHomeInfo(c *gin.Context) {
 	// Set running method
 	serverInfo.RunMethod = settings.RunMethod
 
-	// connect to docker container and get required info about the container.
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err})
-		return
+	switch serverInfo.RunMethod {
+	case "docker":
+		serverInfo, err := dockerContainerInfo(settings, serverInfo)
+		if err != nil {
+			c.JSON(500, err)
+		}
+		c.JSON(200, serverInfo)
+
+	case "command":
+		serverInfo, err := commandInfo(settings, serverInfo)
+		if err != nil {
+			c.JSON(500, err)
+		}
+		c.JSON(200, serverInfo)
 	}
-	containerInfo, err := cli.ContainerInspect(context.Background(), settings.DockerContainerId)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err})
-		return
-	}
-
-	// Set the docker container's status and health into "serverInfo" variable.
-	serverInfo.DockerStatus = containerInfo.State.Status
-	serverInfo.DockerHealth = containerInfo.State.Health.Status
-
-	cli.Close() // Close connection to docker container.
-
-	// If the docker container is running ping the minecraft server to get data back from it.
-	if serverInfo.DockerStatus == "running" && serverInfo.DockerHealth == "healthy" {
-		pingclient := ping.NewClient(settings.MinecraftServerIp, 25565)
-
-		// Connect opens the connection, and can raise an error for example if the server is unreachable
-		err = pingclient.Connect()
-		if err != nil {
-			c.Status(500)
-			return
-		}
-
-		// Handshake is the base request of ping, the one that displays number of players, MOTD, etc...
-		// If all went well, hs contains a field Properties which contains a golang-usable JSON Object
-		hs, err := pingclient.Handshake()
-		if err != nil {
-			c.Status(500)
-			return
-		}
-
-		// Disconnect closes the connection
-		err = pingclient.Disconnect()
-		if err != nil {
-			c.JSON(500, err)
-			return
-		}
-
-		// Set the data pinged into "serverInfo" variable.
-		serverInfo.Ping = hs.Properties.Infos()
-
-		// Check server.properties lines for "enable-rcon", "rcon.port" and "rcon.password" keys and set their values in "serverInfo" variable.
-		rcon, err := utils.ServerPropertiesLineValue("enable-rcon")
-		if err != nil {
-			c.JSON(500, err)
-			return
-		}
-
-		rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
-		if err != nil {
-			c.JSON(500, err)
-			return
-		}
-
-		rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
-		if err != nil {
-			c.JSON(500, err)
-			return
-		}
-
-		rconBool, err := strconv.ParseBool(rcon)
-		if err != nil {
-			c.JSON(500, err)
-			return
-		}
-		serverInfo.RconEnabled = rconBool
-		serverInfo.RconPort = rconPort
-		serverInfo.RconPassword = rconPassword
-	}
-
-	c.JSON(200, serverInfo)
 }
 
 func ControlServer(c *gin.Context) {
@@ -131,7 +72,7 @@ func ControlServer(c *gin.Context) {
 	settings := config.GetValues()
 
 	action := c.Query("action")
-	method := c.Query("method")
+	method := settings.RunMethod
 	switch method {
 	case "docker":
 		switch action {
@@ -152,6 +93,12 @@ func ControlServer(c *gin.Context) {
 		switch action {
 		case "start":
 			res, err := startCommand(settings)
+			if err != nil {
+				c.JSON(res, err.Error())
+			}
+			c.Status(res)
+		case "stop":
+			res, err := stopCommand(settings)
 			if err != nil {
 				c.JSON(res, err.Error())
 			}
@@ -290,6 +237,88 @@ func Backup(c *gin.Context) {
 	os.Remove(filename)
 }
 
+func dockerContainerInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, error) {
+	// connect to docker container and get required info about the container.
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return serverInfo, err
+	}
+	containerInfo, err := cli.ContainerInspect(context.Background(), settings.DockerContainerId)
+	if err != nil {
+		return serverInfo, err
+	}
+
+	// Set the docker container's status and health into "serverInfo" variable.
+	serverInfo.DockerStatus = containerInfo.State.Status
+	serverInfo.DockerHealth = containerInfo.State.Health.Status
+
+	cli.Close() // Close connection to docker container.
+
+	// Get server-port from server.properties file.
+	serverPropertiesPort, err := utils.ServerPropertiesLineValue("server-port")
+	if err != nil {
+		return serverInfo, err
+	}
+
+	serverPort, err := strconv.Atoi(serverPropertiesPort)
+	if err != nil {
+		return serverInfo, err
+	}
+
+	// If the docker container is running ping the minecraft server to get data back from it.
+	if serverInfo.DockerStatus == "running" && serverInfo.DockerHealth == "healthy" {
+		pingclient := ping.NewClient(settings.MinecraftServerIp, serverPort)
+
+		// Connect opens the connection, and can raise an error for example if the server is unreachable
+		err = pingclient.Connect()
+		if err != nil {
+			return serverInfo, err
+		}
+
+		// Handshake is the base request of ping, the one that displays number of players, MOTD, etc...
+		// If all went well, hs contains a field Properties which contains a golang-usable JSON Object
+		hs, err := pingclient.Handshake()
+		if err != nil {
+			return serverInfo, err
+		}
+
+		// Disconnect closes the connection
+		err = pingclient.Disconnect()
+		if err != nil {
+			return serverInfo, err
+		}
+
+		// Set the data pinged into "serverInfo" variable.
+		serverInfo.Ping = hs.Properties.Infos()
+
+		// Check server.properties lines for "enable-rcon", "rcon.port" and "rcon.password" keys and set their values in "serverInfo" variable.
+		rcon, err := utils.ServerPropertiesLineValue("enable-rcon")
+		if err != nil {
+			return serverInfo, err
+		}
+
+		rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
+		if err != nil {
+			return serverInfo, err
+		}
+
+		rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
+		if err != nil {
+			return serverInfo, err
+		}
+
+		rconBool, err := strconv.ParseBool(rcon)
+		if err != nil {
+			return serverInfo, err
+		}
+		serverInfo.RconEnabled = rconBool
+		serverInfo.RconPort = rconPort
+		serverInfo.RconPassword = rconPassword
+	}
+
+	return serverInfo, nil
+}
+
 func startDockerContainer(settings config.Config) (int, error) {
 	// connect with docker container
 	cli, err := client.NewClientWithOpts(client.FromEnv)
@@ -320,8 +349,93 @@ func stopDockerContainer(settings config.Config) (int, error) {
 	return 200, nil
 }
 
-func startCommand(settings config.Config) (int, error) {
+func commandInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, error) {
 
+	// Get server-port from server.properties file.
+	serverPropertiesPort, err := utils.ServerPropertiesLineValue("server-port")
+	if err != nil {
+		return serverInfo, err
+	}
+
+	serverPort, err := strconv.Atoi(serverPropertiesPort)
+	if err != nil {
+		return serverInfo, err
+	}
+
+	pingclient := ping.NewClient(settings.MinecraftServerIp, serverPort)
+
+	// Connect opens the connection, and can raise an error for example if the server is unreachable
+	err = pingclient.Connect()
+	// An error means that the server couldn't be pinged. However, this could mean that the server is either starting or it's offline.
+	if err != nil {
+		// Check if the server process is running. In this block scope if the server is running, it means that the server is starting.
+		process, err := os.FindProcess(settings.Pid)
+		if err != nil {
+			log.Printf("Failed to find process: %s\n", err)
+		} else {
+			processStatus := process.Signal(syscall.Signal(0))
+			// nil means that the server process is not running and it's therefore offline.
+			if processStatus != nil {
+				serverInfo.CommandStatus = "offline"
+			} else {
+				// A value means in this block scope that the server process is running and it's likely that the server is in its starting phase.
+				serverInfo.CommandStatus = "starting"
+			}
+		}
+
+		process.Release()
+	} else {
+		// If the minecraft server was successfully pinged, it is therefore online. And now data can be obtained from the minecraft server.
+		// Handshake is the base request of ping, the one that displays number of players, MOTD, etc...
+		// If all went well, hs contains a field Properties which contains a golang-usable JSON Object
+		hs, err := pingclient.Handshake()
+		if err != nil {
+			return serverInfo, err
+		}
+
+		// Disconnect closes the connection
+		err = pingclient.Disconnect()
+		if err != nil {
+			return serverInfo, err
+		}
+
+		// Set the data pinged into "serverInfo" variable.
+		serverInfo.Ping = hs.Properties.Infos()
+
+		// Check server.properties lines for "enable-rcon", "rcon.port" and "rcon.password" keys and set their values in "serverInfo" variable.
+		rcon, err := utils.ServerPropertiesLineValue("enable-rcon")
+		if err != nil {
+			return serverInfo, err
+		}
+
+		rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
+		if err != nil {
+			return serverInfo, err
+		}
+
+		rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
+		if err != nil {
+			return serverInfo, err
+		}
+
+		rconBool, err := strconv.ParseBool(rcon)
+		if err != nil {
+			return serverInfo, err
+		}
+		serverInfo.RconEnabled = rconBool
+		serverInfo.RconPort = rconPort
+		serverInfo.RconPassword = rconPassword
+
+		serverInfo.CommandStatus = "online"
+	}
+
+	serverInfo.StartCommand = settings.StartCommand
+
+	return serverInfo, nil
+}
+
+func startCommand(settings config.Config) (int, error) {
+	log.Println("Starting Minecraft Server")
 	// Check if the server process is already running.
 	process, err := os.FindProcess(settings.Pid)
 	if err != nil {
@@ -330,6 +444,7 @@ func startCommand(settings config.Config) (int, error) {
 		err := process.Signal(syscall.Signal(0))
 		if err == nil {
 			err = errors.New("server is already running")
+			process.Release()
 			return 400, err
 		}
 	}
@@ -363,6 +478,30 @@ func startCommand(settings config.Config) (int, error) {
 		log.Println(err)
 		return 500, err
 	}
+
+	process.Release()
+
+	return 200, nil
+}
+
+func stopCommand(settings config.Config) (int, error) {
+
+	// Check if the server process is running.
+	process, err := os.FindProcess(settings.Pid)
+	if err != nil {
+		log.Printf("Failed to find process: %s\n", err)
+		return 500, err
+	} else {
+		err := process.Signal(syscall.Signal(0))
+		if err != nil {
+			err = errors.New("server is not running")
+			return 400, err
+		}
+	}
+
+	log.Println("Stopping Minecraft Server")
+	process.Kill()
+	process.Wait()
 
 	return 200, nil
 }
