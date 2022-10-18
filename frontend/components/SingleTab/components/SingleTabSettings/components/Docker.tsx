@@ -5,8 +5,7 @@ type Settings = {
     minecraft_directory: string
     run_method: string
     docker_container_id: string
-    start_script: string
-    stop_script: string
+    start_command: string
 }
 
 type DockerContainer = {
@@ -69,11 +68,11 @@ const Docker = ({ settings, dockerContainers, getSettings }: Props) => {
                     <option value="not-found">No docker container found</option>
                 }
             </select>
-            <div className={styles.SingleTabSettings_btn_connect} onClick={handleConnectDockerContainer} style={settings.run_method === "docker" ? { pointerEvents: "none", opacity: 0.5 } : {}}>
-                <span>{isConnecting ? "Connecting" : settings.run_method !== '' ? "Connected" : "Connect"}</span>
+            <div className={styles.SingleTabSettings_btn} onClick={handleConnectDockerContainer} style={settings.run_method === "docker" ? { pointerEvents: "none", opacity: 0.5 } : {}}>
+                <span>{isConnecting ? "Connecting" : settings.run_method === 'docker' ? "Connected" : "Connect"}</span>
             </div>
             {settings.run_method === "docker" &&
-                <div className={styles.SingleTabSettings_btn_connect} onClick={handleDisconnectDockerContainer}>
+                <div className={styles.SingleTabSettings_btn} onClick={handleDisconnectDockerContainer}>
                     <span>{isDisconnecting ? "Disconnecting" : "Disconnect"}</span>
                 </div>
             }

@@ -62,7 +62,20 @@
         display: none;
       }
 
-      .SingleTabSettings_btn_connect {
+      input {
+        background-color: v.$primary-background-color;
+        border: none;
+        margin: 0;
+        margin-left: 5px;
+        font-family: inherit;
+        font-size: inherit;
+        outline: none;
+        color: white;
+        padding: 2px 4px;
+        border-radius: 5px;
+      }
+
+      .SingleTabSettings_btn {
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -78,6 +91,19 @@
         -moz-user-select: none;
         -webkit-user-select: none;
         -ms-user-select: none;
+        transition: border-color 150ms;
+        &:hover {
+          border-color: white;
+        }
+      }
+
+      .SingleTabSettings_error {
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.6px;
+        color: v.$primary-color;
       }
     }
   }

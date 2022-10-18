@@ -7,8 +7,7 @@ type Settings = {
     minecraft_directory: string
     run_method: string
     docker_container_id: string
-    start_script: string
-    stop_script: string
+    start_command: string
 }
 
 type DockerContainer = {

@@ -40,6 +40,7 @@ func GetValues() Config {
 			config.Backup.Mods = true
 			config.Backup.Config = true
 			config.Backup.ServerProperties = true
+			config.Pid = 0
 
 			// Marshall config struct into json []byte.
 			jsonConfig, _ := json.Marshal(config)
