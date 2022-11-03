@@ -99,8 +99,14 @@ export default Mods
 
 const getMods = async (setMods: Function) => {
     const res = await fetch("/api/mods")
-    const data = await res.json()
-    const sortedData = data.sort((a: Mod, b: Mod) => a.fileName.localeCompare(b.fileName))
-    await setMods(sortedData)
+    if (res.status === 200) {
+        const data = await res.json()
+        const sortedData = data.sort((a: Mod, b: Mod) => a.fileName.localeCompare(b.fileName))
+        await setMods(sortedData)
+    }
+
+    if (res.status === 204) {
+        setMods([])
+    }
 }
 

@@ -49,7 +49,13 @@ func Mods(c *gin.Context) {
 
 	}
 
+	if len(modsArr) == 0 {
+		c.Status(204)
+		return
+	}
+
 	c.JSON(200, modsArr)
+	return
 }
 
 func UploadMods(c *gin.Context) {
