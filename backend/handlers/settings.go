@@ -32,7 +32,7 @@ func GetSettings(c *gin.Context) {
 		// c.JSON(500, gin.H{"error": err})
 		log.Printf("Unable to create docker client: %s", err)
 	} else {
-		containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+		containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 		if err != nil {
 			c.JSON(500, gin.H{"error": err})
 		}
