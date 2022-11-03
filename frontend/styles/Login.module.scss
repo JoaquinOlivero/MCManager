@@ -1,0 +1,76 @@
+@use "./Variables.module.scss" as v;
+
+.Login {
+  background-color: v.$primary-background-color;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 15px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  h2 {
+    margin: 0;
+    text-align: center;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    label {
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    input {
+      width: 250px;
+      background-color: v.$secondary-background-color;
+      border: none;
+      margin: 0;
+      font-family: inherit;
+      font-size: inherit;
+      outline: none;
+      color: white;
+      padding: 2px 4px;
+      border-radius: 5px;
+    }
+    button,
+    input[type="submit"],
+    input[type="reset"] {
+      background: none;
+      color: inherit;
+      border: none;
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      outline: inherit;
+    }
+    button {
+      cursor: pointer;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 125%);
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border: 2px solid v.$primary-background-color;
+      padding: 5px 8px;
+      border-radius: 5px;
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      transition: border-color 150ms;
+      &:hover {
+        border-color: white;
+      }
+    }
+  }
+}

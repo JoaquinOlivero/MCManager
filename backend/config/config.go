@@ -21,6 +21,7 @@ type Config struct {
 	StartCommand       string        `json:"start_command"`
 	Pid                int           `json:"server_pid"`
 	Backup             BackupOptions `json:"backup"`
+	Password           string        `json:"password"`
 }
 
 func GetValues() Config {
@@ -41,6 +42,7 @@ func GetValues() Config {
 			config.Backup.Config = true
 			config.Backup.ServerProperties = true
 			config.Pid = 0
+			config.Password = "admin"
 
 			// Marshall config struct into json []byte.
 			jsonConfig, _ := json.Marshal(config)

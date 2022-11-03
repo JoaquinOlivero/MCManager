@@ -82,7 +82,6 @@ const Home: NextPage = () => {
           setIsLoading(false)
           return setTimeout(async () => await getHomeData(), 5000)
         } else if (data.command_status === "online") {
-          console.log(data)
           if (data.ping_data.version.name === "") {
             return setTimeout(async () => await getHomeData(), 5000)
           }
@@ -196,7 +195,7 @@ const Home: NextPage = () => {
       return setBackupMsg(null)
 
     }).catch(err => {
-      console.log(err)
+      // console.log(err)
     })
 
   }
