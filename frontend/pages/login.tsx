@@ -8,6 +8,7 @@ const Login = () => {
     const { push } = useRouter()
     const { signedIn, setSignedIn, checkSession } = useDataContext()
     const [password, setPassword] = useState<string>("")
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         checkSession()
@@ -29,8 +30,8 @@ const Login = () => {
                 return push("/")
             }
         }).catch(err => {
-            // setRconResponse(err)
-            console.log(err.message)
+            setError(err.message)
+            setPassword("")
         });
     }
 
@@ -43,6 +44,11 @@ const Login = () => {
                     <label htmlFor="password">Password</label>
                     <input type="password" id='password' onChange={(e) => setPassword(e.target.value)} value={password} />
                     <button>Login</button>
+                    {error &&
+                        <div className={styles.Login_error}>
+                            {error}
+                        </div>
+                    }
                 </form>
             </div>
         )
