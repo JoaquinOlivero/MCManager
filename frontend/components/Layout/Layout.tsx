@@ -5,6 +5,7 @@ import Variables from '../../styles/Variables.module.scss'
 import Gear from '../../svg/icons/Gear'
 import { useDataContext } from "../../contexts/DataContext";
 import { useEffect } from 'react'
+import SignOut from '../../svg/icons/SignOut'
 
 type Props = {
     children: React.ReactNode
@@ -31,6 +32,21 @@ const Layout = ({ children }: Props) => {
         push("/edit")
     }
 
+    const handleSignOut = () => {
+        fetch("/api/logout", {
+            method: "GET",
+            credentials: "include"
+        }).then((res) => {
+            if (!res.ok) {
+                return res.text().then(text => { throw new Error(text) })
+            } else {
+                push("/login")
+            }
+        })
+            .catch(err => {
+                console.log(err);
+            });
+    }
 
     return (
         <div className={styles.Layout}>
@@ -78,6 +94,11 @@ const Layout = ({ children }: Props) => {
                                         <span>Settings</span>
                                     </div>
                                 </Link>
+
+                                <div className={styles.Menu_tab} onClick={handleSignOut}>
+                                    <SignOut />
+                                    <span>Sign Out</span>
+                                </div>
                             </div>
                         </div>
                     </div>

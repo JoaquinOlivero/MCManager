@@ -40,6 +40,8 @@ func Logout(c *gin.Context) {
 
 	store.Flush()
 	store.Save()
+
+	c.Status(200)
 }
 
 func CheckSession(c *gin.Context) {
