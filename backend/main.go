@@ -67,6 +67,7 @@ func main() {
 			settings.POST("/connect-docker", handler.ConnectDocker)
 			settings.POST("/disconnect-docker", handler.DisconnectDocker)
 			settings.POST("/save-command", handler.SaveCommand)
+			settings.POST("/backup", handler.BackupOption)
 		}
 
 		edit := api.Group("/edit")

@@ -1,14 +1,23 @@
 import styles from "../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss";
 import Spinner from "../../../../svg/icons/Spinner";
+import Backup from "./components/Backup";
 import ChangePassword from "./components/ChangePassword";
 import Command from "./components/Command";
 import Docker from "./components/Docker";
+
+type BackupSettings = {
+  world: boolean,
+  mods: boolean,
+  config: boolean,
+  server_properties: boolean
+}
 
 type Settings = {
   minecraft_directory: string
   run_method: string
   docker_container_id: string
   start_command: string
+  backup: BackupSettings
 }
 
 
@@ -28,6 +37,7 @@ const SingleTabSettings = ({ settings, dockerContainers, getSettings }: Props) =
     <div className={styles.SingleTabSettings}>
       {settings ? (
         <div className={styles.SingleTabSettings_option_section}>
+
           <div className={styles.SingleTabSettings_option_header}>
             <span>Minecraft Server Control</span>
           </div>
@@ -35,6 +45,14 @@ const SingleTabSettings = ({ settings, dockerContainers, getSettings }: Props) =
             <Command settings={settings} getSettings={getSettings} />
             <Docker settings={settings} dockerContainers={dockerContainers} getSettings={getSettings} />
           </div>
+
+          <div className={styles.SingleTabSettings_option_header}>
+            <span>Backup</span>
+          </div>
+          <div className={styles.SingleTabSettings_option_container}>
+            <Backup backup={settings.backup} />
+          </div>
+
           <div className={styles.SingleTabSettings_option_header}>
             <span>User</span>
           </div>

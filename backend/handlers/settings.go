@@ -43,7 +43,7 @@ func GetSettings(c *gin.Context) {
 	}
 
 	cli.Close()
-	c.JSON(200, gin.H{"settings": settings, "docker_containers": dockerContainers})
+	c.JSON(200, gin.H{"settings": gin.H{"minecraft_directory": settings.MinecraftDirectory, "run_method": settings.RunMethod, "docker_container_id": settings.DockerContainerId, "start_command": settings.StartCommand, "backup": settings.Backup}, "docker_containers": dockerContainers})
 
 }
 
@@ -190,4 +190,50 @@ func SaveCommand(c *gin.Context) {
 	}
 
 	c.Status(200)
+}
+
+func BackupOption(c *gin.Context) {
+	// binding from JSON
+	type Body struct {
+		Option string `json:"option" binding:"required"`
+		Value  *bool  `json:"value" binding:"required"`
+	}
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(400, err.Error())
+		return
+	}
+
+	// Get settings from config.json
+	settings := config.GetValues()
+
+	switch body.Option {
+	case "world":
+		settings.Backup.World = *body.Value
+	case "mods":
+		settings.Backup.Mods = *body.Value
+	case "config":
+		settings.Backup.Config = *body.Value
+	case "server_properties":
+		settings.Backup.ServerProperties = *body.Value
+	}
+
+	// Save settings
+	newSettings, err := json.Marshal(settings)
+	if err != nil {
+		log.Println(err)
+		c.String(500, err.Error())
+		return
+	}
+	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	if err != nil {
+		log.Println(err)
+		c.String(500, err.Error())
+		return
+	}
+
+	c.Status(200)
+	return
 }

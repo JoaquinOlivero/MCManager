@@ -3,11 +3,19 @@ import SingleTabSettings from '../components/SingleTab/components/SingleTabSetti
 import SingleTab from '../components/SingleTab/SingleTab'
 import SingleTabHeader from '../components/SingleTab/SingleTabHeader'
 
+type BackupSettings = {
+    world: boolean,
+    mods: boolean,
+    config: boolean,
+    server_properties: boolean
+}
+
 type Settings = {
     minecraft_directory: string
     run_method: string
     docker_container_id: string
     start_command: string
+    backup: BackupSettings
 }
 
 type DockerContainer = {
