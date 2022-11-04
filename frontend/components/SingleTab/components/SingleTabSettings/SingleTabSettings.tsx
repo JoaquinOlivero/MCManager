@@ -1,5 +1,6 @@
 import styles from "../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss";
 import Spinner from "../../../../svg/icons/Spinner";
+import ChangePassword from "./components/ChangePassword";
 import Command from "./components/Command";
 import Docker from "./components/Docker";
 
@@ -33,6 +34,12 @@ const SingleTabSettings = ({ settings, dockerContainers, getSettings }: Props) =
           <div className={styles.SingleTabSettings_option_container}>
             <Command settings={settings} getSettings={getSettings} />
             <Docker settings={settings} dockerContainers={dockerContainers} getSettings={getSettings} />
+          </div>
+          <div className={styles.SingleTabSettings_option_header}>
+            <span>User</span>
+          </div>
+          <div className={styles.SingleTabSettings_option_container}>
+            <ChangePassword />
           </div>
         </div>
       ) : (

@@ -2,6 +2,9 @@ package handler
 
 import (
 	"MCManager/config"
+	"encoding/json"
+	"io/ioutil"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
@@ -40,6 +43,47 @@ func Logout(c *gin.Context) {
 
 	store.Flush()
 	store.Save()
+
+	c.Status(200)
+}
+
+func ChangePassword(c *gin.Context) {
+	type Body struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+
+	// Get settings
+	settings := config.GetValues()
+
+	if settings.Password != body.OldPassword {
+		c.String(400, "Wrong password")
+		return
+	}
+
+	// Save new password
+	settings.Password = body.NewPassword
+
+	newSettings, err := json.Marshal(settings)
+	if err != nil {
+		log.Println(err)
+		c.Status(500)
+		return
+	}
+	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	if err != nil {
+		log.Println(err)
+		c.Status(500)
+		return
+	}
 
 	c.Status(200)
 }
