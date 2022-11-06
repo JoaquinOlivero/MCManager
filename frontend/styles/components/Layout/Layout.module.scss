@@ -40,6 +40,10 @@
           }
         }
       }
+
+      .Menu_responsive_content {
+        // display: none;
+      }
     }
 
     .Menu_settings {
@@ -78,5 +82,142 @@
     width: 100%;
     height: 100%;
     background-color: v.$secondary-background-color;
+  }
+}
+
+@media (max-width: 1366px) {
+  .Layout {
+    width: 99%;
+    height: 99%;
+    .Menu {
+      width: 12%;
+      h2 {
+        font-size: 20px;
+      }
+      .Menu_content {
+        .Menu_content_tabs {
+          .Menu_tab {
+            span {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .Layout {
+    height: 100%;
+    flex-direction: column;
+    .Menu {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      height: auto;
+      margin: 8px 0;
+
+      h2 {
+        display: none;
+      }
+
+      .Menu_content {
+        margin: 0;
+        .Menu_content_tabs {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          border: none;
+          margin-bottom: 0;
+          padding-bottom: 0;
+          .Menu_tab {
+            margin: 0;
+            span {
+              font-size: 14px;
+            }
+          }
+        }
+      }
+
+      .Menu_settings {
+        .Menu_settings_tabs {
+          width: 100%;
+          height: 100%;
+          flex-direction: row;
+          align-items: center;
+          padding: 0;
+          margin: 0;
+          .Menu_tab {
+            margin: 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  .Layout {
+    .Menu {
+      margin: 0;
+      margin-top: 8px;
+      padding-bottom: 8px;
+      position: relative;
+      transition: margin 250ms ease;
+      .Menu_content {
+        .Menu_content_tabs {
+          position: absolute;
+          width: 100%;
+          top: 0;
+          left: 0;
+          transform: translateY(100%);
+          display: flex;
+          justify-content: center;
+          border-top: 2px solid v.$primary-color;
+          padding-top: 1%;
+          display: none;
+          .Menu_tab {
+            span {
+              font-size: 11px;
+            }
+          }
+        }
+
+        .Menu_responsive_content {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          margin-left: 5px;
+          opacity: 0.9;
+          span {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+          }
+
+          svg {
+            fill: white;
+            width: 16px;
+          }
+        }
+      }
+
+      .Menu_settings {
+        .Menu_settings_tabs {
+          gap: 10px;
+          .Menu_tab {
+            span {
+              font-size: 12px;
+            }
+            svg {
+              width: 14px;
+            }
+          }
+        }
+      }
+    }
   }
 }

@@ -4,14 +4,18 @@ import styles from '../../styles/components/Layout/Layout.module.scss'
 import Variables from '../../styles/Variables.module.scss'
 import Gear from '../../svg/icons/Gear'
 import { useDataContext } from "../../contexts/DataContext";
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import SignOut from '../../svg/icons/SignOut'
+import MenuBurger from '../../svg/icons/MenuBurger'
 
 type Props = {
     children: React.ReactNode
 }
 
 const Layout = ({ children }: Props) => {
+    const menuRef = useRef<HTMLDivElement>(null)
+    const menuContentTabsRef = useRef<HTMLDivElement>(null)
+    const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
     const { route, push } = useRouter()
     const { editFilepath, setEditFilepath, signedIn, checkSession } = useDataContext()
 
@@ -40,6 +44,13 @@ const Layout = ({ children }: Props) => {
             if (!res.ok) {
                 return res.text().then(text => { throw new Error(text) })
             } else {
+                const menu = menuRef.current
+                const menuContentTabs = menuContentTabsRef.current
+                if (isMenuOpen && menu && menuContentTabs) {
+                    menu.style.marginBottom = "0";
+                    menuContentTabs.style.display = "none"
+                    setIsMenuOpen(false)
+                }
                 push("/login")
             }
         })
@@ -48,17 +59,39 @@ const Layout = ({ children }: Props) => {
             });
     }
 
+    const handleClickResponsiveMenu = async () => {
+        await setIsMenuOpen(!isMenuOpen)
+        const menu = menuRef.current
+        const menuContentTabs = menuContentTabsRef.current
+
+        if (isMenuOpen && menu && menuContentTabs) {
+            menu.style.marginBottom = "0";
+            setTimeout(() => {
+                menuContentTabs.style.display = "none"
+            }, 250);
+        }
+
+        if (!isMenuOpen && menu && menuContentTabs) {
+            menu.style.marginBottom = "40px";
+            menuContentTabs.style.display = "flex"
+        }
+    }
+
     return (
         <div className={styles.Layout}>
             {/* Left menu persistent layout */}
             {signedIn && !route.includes("login") ?
                 <>
-                    <div className={styles.Menu}>
+                    <div className={styles.Menu} ref={menuRef}>
                         <Link href='/'>
                             <h2>MCManager</h2>
                         </Link>
                         <div className={styles.Menu_content}>
-                            <div className={styles.Menu_content_tabs}>
+                            <div className={styles.Menu_responsive_content} onClick={handleClickResponsiveMenu}>
+                                <MenuBurger />
+                                <span>Menu</span>
+                            </div>
+                            <div className={styles.Menu_content_tabs} ref={menuContentTabsRef}>
                                 <div className={styles.Menu_tab}>
                                     <Link href="/mods">
                                         <span style={route.includes("mods") ? { color: Variables.primaryColor } : {}}>Mods</span>

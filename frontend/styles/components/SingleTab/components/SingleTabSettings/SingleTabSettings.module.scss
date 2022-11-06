@@ -107,3 +107,24 @@
     }
   }
 }
+
+@media (max-width: 700px) {
+  .SingleTabSettings {
+    .SingleTabSettings_option_section {
+      .SingleTabSettings_option_header {
+        width: auto;
+      }
+
+      .SingleTabSettings_option_container {
+        .SingleTabSettings_option_content {
+          align-items: flex-start;
+          flex-direction: column;
+
+          .SingleTabSettings_content_title {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}

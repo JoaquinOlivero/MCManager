@@ -142,3 +142,46 @@
     }
   }
 }
+
+@media (max-width: 700px) {
+  .SingleTabHeader {
+    .SingleTabHeader_left_side {
+      width: 35%;
+      .SingleTabHeader_breadcrumbs {
+        font-size: 10px;
+        margin-left: 8px;
+      }
+
+      svg {
+        width: 15px;
+      }
+    }
+
+    .SingleTabHeader_title {
+      font-size: 16px;
+    }
+
+    .SingleTabHeader_crud {
+      width: 35%;
+      gap: 10px;
+
+      .SingleTabHeader_crud_btn {
+        font-size: 10px;
+        gap: 2px;
+        padding: 4px;
+      }
+
+      svg {
+        width: 10px;
+      }
+
+      .SingleTabHeader_crud_add {
+        padding: 0;
+        label {
+          padding: 4px;
+          gap: 3px;
+        }
+      }
+    }
+  }
+}
