@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import SingleTabDirectory from "../../components/SingleTab/components/SingleTabDirectory/SingleTabDirectory";
-import SingleTab from "../../components/SingleTab/SingleTab";
-import SingleTabHeader from "../../components/SingleTab/SingleTabHeader";
+import SingleTabDirectory from "../SingleTab/components/SingleTabDirectory/SingleTabDirectory";
+import SingleTab from "../SingleTab/SingleTab";
+import SingleTabHeader from "../SingleTab/SingleTabHeader";
 import { useRouter } from "next/router";
 import { useDataContext } from "../../contexts/DataContext"
 import ConfirmPrompt from "../Utils/ConfirmPrompt";

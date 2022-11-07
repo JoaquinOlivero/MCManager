@@ -2,42 +2,42 @@
 /MCManager
 
 # Backend
-/backend/dockerresponse.json
-/backend/tmp/
-/backend/config.json
+/api/dockerresponse.json
+/api/tmp/
+/api/config.json
 
 
 # Frontend
 # dependencies
-/frontend/node_modules
-/frontend/.pnp
-/frontend/.pnp.js
+/src/node_modules
+/src/.pnp
+/src/.pnp.js
 
 # testing
-/frontend//coverage
+/src//coverage
 
 # next.js
-/frontend/.next/
-/frontend/out/
+/src/.next/
+/src/out/
 
 # production
-/frontend/build
+/src/build
 
 # misc
-/frontend/.DS_Store
-/frontend/*.pem
+/src/.DS_Store
+/src/*.pem
 
 # debug
-/frontend/npm-debug.log*
-/frontend/yarn-debug.log*
-/frontend/yarn-error.log*
-/frontend/.pnpm-debug.log*
+/src/npm-debug.log*
+/src/yarn-debug.log*
+/src/yarn-error.log*
+/src/.pnpm-debug.log*
 
 # local env files
-/frontend/.env*.local
+/src/.env*.local
 
 # vercel
-/frontend/.vercel
+/src/.vercel
 
 # typescript
 *.tsbuildinfo

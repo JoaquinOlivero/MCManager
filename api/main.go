@@ -10,9 +10,9 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	// "os"
+	"os"
 
-	// "github.com/gin-contrib/static"
+	"github.com/gin-contrib/static"
 
 	helmet "github.com/danielkov/gin-helmet"
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ import (
 func main() {
 	config.GetValues()
 
-	// os.Setenv("MCMANAGER_HTTP_PROXY_PORT", "5000")
+	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", "5555")
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -32,7 +32,7 @@ func main() {
 	r.Use(ginsession.New(session.SetCookieName("MCManager")))
 	r.MaxMultipartMemory = 8 << 20 // 8 MiB
 	r.SetTrustedProxies(nil)
-	// r.Use(static.Serve("/", static.LocalFile("out/", false)))
+	r.Use(static.Serve("/", static.LocalFile("out/", false)))
 
 	// Setup route group for the API
 	api := r.Group("/api")
@@ -78,13 +78,13 @@ func main() {
 		}
 	}
 
-	// port := os.Getenv("MCMANAGER_HTTP_PROXY_PORT")
-	port := "5001"
+	port := os.Getenv("MCMANAGER_HTTP_PROXY_PORT")
+	// port := "5001"
 	fmt.Printf("Server started on port: %v\n", port)
-	r.NoRoute(ReverseProxy)
-	// r.NoRoute(func(c *gin.Context) {
-	// 	c.File("out/index.html")
-	// })
+	// r.NoRoute(ReverseProxy)
+	r.NoRoute(func(c *gin.Context) {
+		c.File("out/index.html")
+	})
 	r.Run(":" + port)
 }
 
