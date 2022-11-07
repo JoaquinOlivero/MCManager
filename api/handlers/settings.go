@@ -235,5 +235,4 @@ func BackupOption(c *gin.Context) {
 	}
 
 	c.Status(200)
-	return
 }

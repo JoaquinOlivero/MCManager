@@ -55,7 +55,6 @@ func Mods(c *gin.Context) {
 	}
 
 	c.JSON(200, modsArr)
-	return
 }
 
 func UploadMods(c *gin.Context) {

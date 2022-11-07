@@ -35,7 +35,6 @@ func Login(c *gin.Context) {
 	store.Save()
 
 	c.Status(200)
-	return
 }
 
 func Logout(c *gin.Context) {
