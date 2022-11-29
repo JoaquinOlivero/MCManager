@@ -4,13 +4,10 @@ import (
 	"MCManager/config"
 	handler "MCManager/handlers"
 	"MCManager/middleware"
-
-	"fmt"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
-
+	"log"
 	"os"
+
+	"flag"
 
 	"github.com/gin-contrib/static"
 
@@ -21,9 +18,20 @@ import (
 )
 
 func main() {
+	portFlag := flag.String("p", "", "-p flag defines the port to be used by MCManager. Defaults to 5555.")
+
+	flag.Parse()
+
+	port := *portFlag
+
+	if port == "" {
+		port = "5555"
+	}
+
+	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", port)
+
 	config.GetValues()
 
-	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", "5555")
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -78,9 +86,7 @@ func main() {
 		}
 	}
 
-	port := os.Getenv("MCMANAGER_HTTP_PROXY_PORT")
-	// port := "5001"
-	fmt.Printf("Server started on port: %v\n", port)
+	log.Printf("Server started on port: %v\n", port)
 	// r.NoRoute(ReverseProxy)
 	r.NoRoute(func(c *gin.Context) {
 		c.File("out/index.html")
@@ -88,16 +94,16 @@ func main() {
 	r.Run(":" + port)
 }
 
-func ReverseProxy(c *gin.Context) {
-	remote, _ := url.Parse("http://localhost:3002")
-	proxy := httputil.NewSingleHostReverseProxy(remote)
-	proxy.Director = func(req *http.Request) {
-		req.Header = c.Request.Header
-		req.Host = remote.Host
-		req.URL = c.Request.URL
-		req.URL.Scheme = remote.Scheme
-		req.URL.Host = remote.Host
-	}
+// func ReverseProxy(c *gin.Context) {
+// 	remote, _ := url.Parse("http://localhost:3002")
+// 	proxy := httputil.NewSingleHostReverseProxy(remote)
+// 	proxy.Director = func(req *http.Request) {
+// 		req.Header = c.Request.Header
+// 		req.Host = remote.Host
+// 		req.URL = c.Request.URL
+// 		req.URL.Scheme = remote.Scheme
+// 		req.URL.Host = remote.Host
+// 	}
 
-	proxy.ServeHTTP(c.Writer, c.Request)
-}
+// 	proxy.ServeHTTP(c.Writer, c.Request)
+// }
