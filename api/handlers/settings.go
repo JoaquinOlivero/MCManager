@@ -29,12 +29,11 @@ func GetSettings(c *gin.Context) {
 	var dockerContainers []DockerContainers
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		// c.JSON(500, gin.H{"error": err})
 		log.Printf("Unable to create docker client: %s", err)
 	} else {
 		containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 		if err != nil {
-			c.JSON(500, gin.H{"error": err})
+			log.Println("Error when retrieving docker container list: ", err)
 		}
 
 		for _, container := range containers {
@@ -54,7 +53,7 @@ func ConnectDocker(c *gin.Context) {
 
 	// binding from JSON
 	type Body struct {
-		ContainerId string `json:"container_id"`
+		ContainerId string `json:"container_id" binding:"required"`
 	}
 	// Bind request body
 	var body Body
@@ -73,6 +72,8 @@ func ConnectDocker(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err})
 	}
 
+	fmt.Println(containerInfo)
+
 	// Save settings in config.json
 	settings.RunMethod = "docker"
 	settings.DockerContainerId = body.ContainerId
@@ -90,7 +91,8 @@ func ConnectDocker(c *gin.Context) {
 
 	cli.Close()
 
-	c.Status(200)
+	// c.Status(200)
+	c.JSON(200, containerInfo)
 
 }
 
@@ -121,8 +123,8 @@ func SaveCommand(c *gin.Context) {
 
 	// binding from JSON
 	type Body struct {
-		MinecraftDirectory string `json:"minecraft_directory"`
-		StartCommand       string `json:"start_command"`
+		MinecraftDirectory string `json:"minecraft_directory" binding:"required"`
+		StartCommand       string `json:"start_command" binding:"startswith=java"`
 	}
 	// Bind request body
 	var body Body
@@ -133,7 +135,7 @@ func SaveCommand(c *gin.Context) {
 	}
 
 	// Check that minecraft_directory exists and contains the "mods", "config", "logs" directories and the server.properties file.
-	// First, check whether minecraft_directory the path is absolute.
+	// First, check whether minecraft_directory path is absolute.
 	isAbs := filepath.IsAbs(body.MinecraftDirectory)
 	if isAbs {
 		// Second, check whether the root minecraft directory exists.
