@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 func GetSettings(c *gin.Context) {
@@ -130,6 +131,19 @@ func SaveCommand(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
+		_, isValidationErr := err.(validator.ValidationErrors)
+		if isValidationErr {
+			for _, validationErr := range err.(validator.ValidationErrors) {
+				tag := validationErr.Tag()
+				if tag == "startswith" {
+					err := `The command needs to start with: "java"`
+					c.String(400, err)
+					return
+				}
+			}
+		}
+
+		// handles other err type
 		c.JSON(400, err.Error())
 		return
 	}
