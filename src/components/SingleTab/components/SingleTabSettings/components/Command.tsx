@@ -1,3 +1,4 @@
+import { stringify } from 'querystring'
 import { useState } from 'react'
 import styles from '../../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss'
 
@@ -14,8 +15,8 @@ type Props = {
 }
 
 const Command = ({ settings, getSettings }: Props) => {
-    const [mcDir, setMcDir] = useState<string>(settings.minecraft_directory)
-    const [startCommand, setStartCommand] = useState<string>(settings.start_command)
+    const [mcDir, setMcDir] = useState<string>(settings.run_method !== "docker" ? settings.minecraft_directory : "")
+    const [startCommand, setStartCommand] = useState<string>(settings.run_method !== "docker" ? settings.start_command : "")
     const [isSaving, setisSaving] = useState<boolean>(false)
     const [responseError, setResponseError] = useState<null | string>(null)
 
@@ -37,6 +38,8 @@ const Command = ({ settings, getSettings }: Props) => {
         }).catch(err => {
             setResponseError(err.message)
             setisSaving(false)
+            setMcDir("")
+            setStartCommand("")
         });
     }
 
