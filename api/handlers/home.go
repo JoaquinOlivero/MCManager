@@ -3,22 +3,16 @@ package handler
 import (
 	"MCManager/config"
 	"MCManager/utils"
-	"archive/zip"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -132,111 +126,6 @@ func SendRconCommand(c *gin.Context) {
 	}
 
 	c.String(200, rconResponse)
-}
-
-func Backup(c *gin.Context) {
-	// Get settings
-	settings := config.GetValues()
-
-	// Get world name
-	worldName, err := utils.ServerPropertiesLineValue("level-name")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Get current time to measure total file compression time.
-	timeStart := time.Now()
-
-	// zip filename
-	filename := "minecraft-server-backup-" + time.Now().Format("02-Jan-2006-15:04:05") + ".zip"
-	// Backup file
-	backupFile, err := os.Create(filename)
-	if err != nil {
-		panic(err)
-	}
-	defer backupFile.Close()
-
-	// Create a new zip archive.
-	w := zip.NewWriter(backupFile)
-	defer w.Close()
-
-	walkFunc := func(absPath string, info fs.DirEntry, err error) error {
-		fmt.Printf("Compressing: %#v\n", absPath)
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		file, err := os.Open(absPath)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		f, err := w.Create(strings.TrimLeft(absPath, "/"))
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(f, file)
-		if err != nil {
-			return err
-		}
-		file.Close()
-		return nil
-	}
-
-	// Backup config directory.
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/config", walkFunc)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Backup current world directory.
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/"+worldName, walkFunc)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Backup mods directory.
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/mods", walkFunc)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Backup server.properties file
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/server.properties", walkFunc)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Check error on close for both the archive zip and the actual zip file.
-	err = w.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = backupFile.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Time it took to compress all files.
-	t := time.Now()
-	elapsed := t.Sub(timeStart)
-	fmt.Printf("Backup is ready to be sent. Compressing all the files took: %v\n", elapsed)
-
-	// Anonymous function encapsulating c.File() that sends the backup file, so that c.File() doesn't end the execution of the function. Thus, allowing the handler function to continue executing and remove the temporary backup file already downloaded by the user.
-	func(c *gin.Context) {
-		// Set HTTP headers.
-		c.Header("Content-Type", c.GetHeader("Content-Type"))
-		c.Header("Content-Disposition", "attachment; fileholder="+filename)
-		c.File(filename)
-	}(c)
-
-	// Remove temporary backup file created.
-	os.Remove(filename)
 }
 
 func dockerContainerInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, error) {
@@ -475,7 +364,7 @@ func startCommand(settings config.Config) (int, error) {
 		log.Println(err)
 		return 500, err
 	}
-	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	err = os.WriteFile("./config.json", newSettings, 0644)
 	if err != nil {
 		log.Println(err)
 		return 500, err

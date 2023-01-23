@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -73,8 +72,6 @@ func ConnectDocker(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err})
 	}
 
-	fmt.Println(containerInfo)
-
 	// Save settings in config.json
 	settings.RunMethod = "docker"
 	settings.DockerContainerId = body.ContainerId
@@ -85,7 +82,8 @@ func ConnectDocker(c *gin.Context) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+
+	err = os.WriteFile("./config.json", newSettings, 0755)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -110,7 +108,7 @@ func DisconnectDocker(c *gin.Context) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	err = os.WriteFile("./config.json", newSettings, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -199,7 +197,7 @@ func SaveCommand(c *gin.Context) {
 		log.Println(err)
 		c.String(500, err.Error())
 	}
-	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	err = os.WriteFile("./config.json", newSettings, 0644)
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
@@ -243,7 +241,7 @@ func BackupOption(c *gin.Context) {
 		c.String(500, err.Error())
 		return
 	}
-	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	err = os.WriteFile("./config.json", newSettings, 0644)
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())

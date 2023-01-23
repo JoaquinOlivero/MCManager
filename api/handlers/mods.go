@@ -3,13 +3,11 @@ package handler
 import (
 	"MCManager/config"
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	// "github.com/essentialkaos/go-jar"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,36 +15,41 @@ func Mods(c *gin.Context) {
 	// config.json values
 	config := config.GetValues()
 
-	// Set minecraft directory path
+	// Get minecraft directory path
 	minecraftDirectory := config.MinecraftDirectory
+
 	// Set minecraft mods directory path
 	modsDirectory := fmt.Sprintf("%v/mods", minecraftDirectory)
 	type mods struct {
 		FileName string `json:"fileName"`
-		ModId    string `json:"modId"`
-		Version  string `json:"version"`
+		// ModId    string `json:"modId"`
+		// Version  string `json:"version"`
 	}
+
+	// Walk through "mods" directory and get the files.
 	var modsArr []mods
 
-	files, err := ioutil.ReadDir(modsDirectory)
-	if err != nil {
-		log.Fatal(err)
+	walkFunc := func(root string, info fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+
+		if info.IsDir() && info.Name() != "mods" {
+			return filepath.SkipDir
+		}
+
+		if !info.IsDir() {
+			modsArr = append(modsArr, mods{FileName: info.Name()})
+		}
+
+		return nil
 	}
 
-	for _, f := range files {
-		fileName := f.Name()
-
-		// manifest, err := jar.ReadFile(modsDirectory + "/" + fileName)
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
-		// // fmt.Println(manifest)
-		// // manifest["Implementation-Timestamp"] --> timestamp from when it was created. Useful to check if the mod has new updates.
-		// modId := manifest["Implementation-Title"]
-		// version := manifest["Implementation-Version"]
-
-		modsArr = append(modsArr, mods{FileName: fileName})
-
+	err := filepath.WalkDir(modsDirectory, walkFunc)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
 	if len(modsArr) == 0 {

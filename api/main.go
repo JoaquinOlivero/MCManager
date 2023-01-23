@@ -5,6 +5,9 @@ import (
 	handler "MCManager/handlers"
 	"MCManager/middleware"
 	"log"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 
 	"flag"
@@ -48,7 +51,7 @@ func main() {
 		api.GET("/", middleware.Session, handler.GetHomeInfo)
 		api.POST("/", middleware.Session, handler.ControlServer)
 		api.POST("/rcon", middleware.Session, handler.SendRconCommand)
-		api.GET("/backup", middleware.Session, handler.Backup)
+
 		api.POST("/login", handler.Login)
 		api.GET("/check", handler.CheckSession)
 		api.POST("/password", middleware.Session, handler.ChangePassword)
@@ -84,6 +87,13 @@ func main() {
 			edit.GET("/", handler.GetFile)
 			edit.POST("/save", handler.SaveFile)
 		}
+
+		backup := api.Group("/backup")
+		backup.Use(middleware.Session)
+		{
+			backup.GET("", middleware.Session, handler.Backup)
+			backup.StaticFS("/download", gin.Dir("backup", true))
+		}
 	}
 
 	log.Printf("Server started on port: %v\n", port)
@@ -94,16 +104,16 @@ func main() {
 	r.Run(":" + port)
 }
 
-// func ReverseProxy(c *gin.Context) {
-// 	remote, _ := url.Parse("http://localhost:3002")
-// 	proxy := httputil.NewSingleHostReverseProxy(remote)
-// 	proxy.Director = func(req *http.Request) {
-// 		req.Header = c.Request.Header
-// 		req.Host = remote.Host
-// 		req.URL = c.Request.URL
-// 		req.URL.Scheme = remote.Scheme
-// 		req.URL.Host = remote.Host
-// 	}
+func ReverseProxy(c *gin.Context) {
+	remote, _ := url.Parse("http://localhost:3002")
+	proxy := httputil.NewSingleHostReverseProxy(remote)
+	proxy.Director = func(req *http.Request) {
+		req.Header = c.Request.Header
+		req.Host = remote.Host
+		req.URL = c.Request.URL
+		req.URL.Scheme = remote.Scheme
+		req.URL.Host = remote.Host
+	}
 
-// 	proxy.ServeHTTP(c.Writer, c.Request)
-// }
+	proxy.ServeHTTP(c.Writer, c.Request)
+}

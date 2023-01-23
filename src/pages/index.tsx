@@ -165,39 +165,28 @@ const Home: NextPage = () => {
       });
   }
 
-  const handleDownloadBackup = async () => {
+  const handleDownloadBackup = () => {
     // Update backup message state.
     setBackupMsg("Preparing backup. This may take a while...")
 
-    // initialize variable to set filename from content-disposition header.
-    let filename = '';
-
-    fetch("/api/backup").then(res => {
-      const disposition = res.headers.get('Content-Disposition');
-      filename = disposition!.split(/;(.+)/)[1].split(/=(.+)/)[1];
-      if (filename.toLowerCase().startsWith("utf-8''"))
-        filename = decodeURIComponent(filename.replace("utf-8''", ''));
-      else
-        filename = filename.replace(/['"]/g, '');
-      return res.blob();
-
-    }).then(blob => {
-
-      var url = window.URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a); // append the element to the dom
-      a.click();
-      a.remove(); // afterwards, remove the element  
-
-      // Set states back to default values.
-      return setBackupMsg(null)
-
-    }).catch(err => {
-      // console.log(err)
+    fetch("/api/backup", {
+      method: "GET",
+      credentials: "include"
     })
-
+      .then(res => {
+        return res.text()
+          .then(filename => {
+            router.push("api/backup/download/" + filename)
+            setBackupMsg(null)
+          })
+          .catch(err => {
+            setBackupMsg(err.message)
+          })
+      })
+      .catch(err => {
+        // console.log(err.message)
+        setBackupMsg(err.message)
+      })
   }
 
   useEffect(() => {

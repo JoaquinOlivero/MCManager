@@ -3,8 +3,8 @@ package handler
 import (
 	"MCManager/config"
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
@@ -77,7 +77,7 @@ func ChangePassword(c *gin.Context) {
 		c.Status(500)
 		return
 	}
-	err = ioutil.WriteFile("./config.json", newSettings, 0644)
+	err = os.WriteFile("./config.json", newSettings, 0644)
 	if err != nil {
 		log.Println(err)
 		c.Status(500)

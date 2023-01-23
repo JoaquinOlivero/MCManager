@@ -5,6 +5,7 @@
 /api/dockerresponse.json
 /api/tmp/
 /api/config.json
+/api/go-build.txt
 
 
 # Frontend
@@ -42,3 +43,8 @@
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# docker
+Dockerfile
+Dockerfile-amd64
+Dockerfile-arm64
