@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"MCManager/config"
-	"encoding/json"
-	"log"
-	"os"
+	"database/sql"
 
 	"github.com/gin-gonic/gin"
 	ginsession "github.com/go-session/gin-session"
@@ -23,9 +20,27 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Get settings
-	settings := config.GetValues()
-	if settings.Password != body.Password {
+	// Get password from DB
+	var dbPassword string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT password FROM settings WHERE id=?", 0)
+	err = row.Scan(&dbPassword)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
+
+	// Check if passwords match.
+	if dbPassword != body.Password {
 		c.String(400, "Wrong password")
 		return
 	}
@@ -60,27 +75,35 @@ func ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// Get settings
-	settings := config.GetValues()
+	// Get password from DB
+	var dbPassword string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	if settings.Password != body.OldPassword {
+	defer db.Close()
+
+	row := db.QueryRow("SELECT password FROM settings WHERE id=?", 0)
+	err = row.Scan(&dbPassword)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	// Check if passwords match.
+	if dbPassword != body.OldPassword {
 		c.String(400, "Wrong password")
 		return
 	}
 
-	// Save new password
-	settings.Password = body.NewPassword
+	db.Close()
 
-	newSettings, err := json.Marshal(settings)
+	// Save new password
+	_, err = db.Exec("UPDATE settings SET password=? WHERE id=?", body.NewPassword, 0)
 	if err != nil {
-		log.Println(err)
-		c.Status(500)
-		return
-	}
-	err = os.WriteFile("./config.json", newSettings, 0644)
-	if err != nil {
-		log.Println(err)
-		c.Status(500)
+		c.String(500, err.Error())
 		return
 	}
 

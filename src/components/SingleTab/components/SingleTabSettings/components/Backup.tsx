@@ -1,5 +1,3 @@
-import styles from '../../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss'
-import variables from "../../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss"
 import { Toggle } from '../../../../Utils/ToggleButton'
 
 type BackupSettings = {
@@ -42,7 +40,7 @@ const Backup = ({ backup }: Props) => {
 
             <Toggle label='config' toggled={backup.config} onClick={handleToggleBackup} />
 
-            <Toggle label='server_properties' toggled={backup.server_properties} onClick={handleToggleBackup} />
+            <Toggle label='serverProperties' toggled={backup.server_properties} onClick={handleToggleBackup} />
         </div>
     )
 }

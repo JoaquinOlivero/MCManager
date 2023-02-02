@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"MCManager/config"
 	"MCManager/utils"
 	"bufio"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -16,32 +16,51 @@ func GetDirectory(c *gin.Context) {
 	// Directory name
 	name := c.Param("name")
 
-	// Get settings
-	settings := config.GetValues()
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	// Set minecraft directory path
-	minecraftDirectory := settings.MinecraftDirectory
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	switch name {
 	case "world":
 		data, err := worldDir(minecraftDirectory)
 		if err != nil {
 			c.String(400, err.Error())
+			return
 		}
+
 		c.JSON(200, data)
 		return
 	case "config":
 		data, err := configDir(minecraftDirectory)
 		if err != nil {
 			c.String(400, err.Error())
+			return
 		}
+
 		c.JSON(200, data)
 		return
 	case "logs":
 		data, err := logsDir(minecraftDirectory)
 		if err != nil {
 			c.String(400, err.Error())
+			return
 		}
+
 		c.JSON(200, data)
 		return
 	}
@@ -63,11 +82,25 @@ func RemoveFiles(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	// Get settings
-	settings := config.GetValues()
 
-	// Set minecraft directory path
-	minecraftDirectory := settings.MinecraftDirectory
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	// Loop through files and remove them from the directory.
 	for _, file := range body.FileList {
@@ -97,7 +130,6 @@ func RemoveFiles(c *gin.Context) {
 }
 
 func worldDir(minecraftDirectory string) (interface{}, error) {
-
 	// Open and read server.properties file and retrieve the currrent world name --> level-name=world. The current world name is the name of the directory containing all the world files.
 	serverPropertiesPath := fmt.Sprintf("%v/server.properties", minecraftDirectory)
 
@@ -140,13 +172,10 @@ func worldDir(minecraftDirectory string) (interface{}, error) {
 		return nil, err
 	}
 
-	// c.JSON(200, gin.H{"dir": directoryFiles, "world_name": worldDirName})
 	return gin.H{"dir": directoryFiles, "world_name": worldDirName}, nil
-
 }
 
 func configDir(minecraftDirectory string) (interface{}, error) {
-
 	// Set config directory
 	configDir := fmt.Sprintf("%v/config", minecraftDirectory)
 

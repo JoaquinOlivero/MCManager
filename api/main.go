@@ -1,9 +1,9 @@
 package main
 
 import (
-	"MCManager/config"
 	handler "MCManager/handlers"
 	"MCManager/middleware"
+	"MCManager/utils"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -33,7 +33,10 @@ func main() {
 
 	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", port)
 
-	config.GetValues()
+	err := utils.InitializeDb()
+	if err != nil {
+		log.Println(err)
+	}
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()

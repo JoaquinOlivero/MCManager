@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"MCManager/config"
+	"database/sql"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -12,11 +12,24 @@ import (
 )
 
 func Mods(c *gin.Context) {
-	// config.json values
-	config := config.GetValues()
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	// Get minecraft directory path
-	minecraftDirectory := config.MinecraftDirectory
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	// Set minecraft mods directory path
 	modsDirectory := fmt.Sprintf("%v/mods", minecraftDirectory)
@@ -46,7 +59,7 @@ func Mods(c *gin.Context) {
 		return nil
 	}
 
-	err := filepath.WalkDir(modsDirectory, walkFunc)
+	err = filepath.WalkDir(modsDirectory, walkFunc)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -61,11 +74,25 @@ func Mods(c *gin.Context) {
 }
 
 func UploadMods(c *gin.Context) {
-	// config.json values
-	config := config.GetValues()
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	// Set minecraft directory path
-	minecraftDirectory := config.MinecraftDirectory
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
+
 	// Set minecraft mods directory path
 	modsDirectory := fmt.Sprintf("%v/mods", minecraftDirectory)
 
@@ -90,11 +117,25 @@ func UploadMods(c *gin.Context) {
 }
 
 func RemoveMods(c *gin.Context) {
-	// config.json values
-	config := config.GetValues()
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	// Set minecraft directory path
-	minecraftDirectory := config.MinecraftDirectory
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
+
 	// Set minecraft mods directory path
 	modsDirectory := fmt.Sprintf("%v/mods", minecraftDirectory)
 	// Binding from JSON
@@ -104,9 +145,9 @@ func RemoveMods(c *gin.Context) {
 
 	// Bind request body
 	var body Body
-	err := c.ShouldBindJSON(&body)
+	err = c.ShouldBindJSON(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": err.Error()})
 	}
 
 	// Loop through mods and remove them from the mods directory.
@@ -115,7 +156,7 @@ func RemoveMods(c *gin.Context) {
 
 		err := os.Remove(modPath)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			c.JSON(400, gin.H{"error": err})
 		}
 	}
 

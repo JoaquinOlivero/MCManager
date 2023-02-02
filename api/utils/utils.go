@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"MCManager/config"
 	"bufio"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -105,9 +106,25 @@ func FileData(fullFilePath, fileFormat string) (map[string]interface{}, error) {
 }
 
 func ServerPropertiesLineValue(key string) (string, error) {
-	settings := config.GetValues()
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		return "", err
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		return "", err
+	}
+
+	db.Close()
+
 	// Open and read server.properties file and retrieve the currrent world name --> level-name=world. The current world name is the name of the directory containing all the world files.
-	serverPropertiesPath := fmt.Sprintf("%v/server.properties", settings.MinecraftDirectory)
+	serverPropertiesPath := fmt.Sprintf("%v/server.properties", minecraftDirectory)
 
 	file, err := os.Open(serverPropertiesPath)
 	if err != nil {
@@ -138,4 +155,63 @@ func ServerPropertiesLineValue(key string) (string, error) {
 	}
 
 	return keyValue, nil
+}
+
+func InitializeDb() error {
+	// Check if database file exists. If it doesnt exist, create it.
+	dbFile, err := os.OpenFile("config.db", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	if err != nil {
+		if os.IsExist(err) {
+			log.Println("Database file found.")
+			return nil
+		} else {
+			return err
+		}
+	}
+	log.Println("Creating database file.")
+	dbFile.Close()
+
+	// Add tables and default data to the recently created database.
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	// "settings" table.
+	_, err = db.Exec("CREATE TABLE settings (ID int DEFAULT 0, directory VARCHAR(255) DEFAULT NULL, serverIp VARCHAR(255) NOT NULL DEFAULT 'localhost', serverPort INT DEFAULT 25565, method VARCHAR(10) DEFAULT NULL, containerId VARCHAR(255) DEFAULT NULL, startCommand VARCHAR(255) DEFAULT NULL, serverPid INT DEFAULT NULL, password VARCHAR(255) DEFAULT 'admin', setPassword BIT DEFAULT 0)")
+	if err != nil {
+		return err
+	}
+
+	// insert data into settings table.
+	_, err = db.Exec("INSERT INTO settings (id) VALUES (0)")
+	if err != nil {
+		return err
+	}
+
+	// "backup" table.
+	_, err = db.Exec("CREATE TABLE backup (ID int NOT NULL DEFAULT 0, world bit NOT NULL DEFAULT 1, mods bit NOT NULL DEFAULT 1, config bit NOT NULL DEFAULT 1, serverProperties bit NOT NULL DEFAULT 1)")
+	if err != nil {
+		return err
+	}
+
+	// insert data into backup table.
+	_, err = db.Exec("INSERT INTO backup VALUES (0,1,1,1,1)")
+	if err != nil {
+		return err
+	}
+
+	db.Close()
+
+	return nil
+}
+
+func Itob(i int) bool {
+	if i != 0 {
+		return i != 0
+	}
+
+	return false
 }

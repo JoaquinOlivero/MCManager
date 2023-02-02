@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"MCManager/config"
 	"MCManager/utils"
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,12 +12,24 @@ import (
 )
 
 func GetFile(c *gin.Context) {
+	// Get minecraft directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	// Get settings
-	settings := config.GetValues()
+	defer db.Close()
 
-	// Set minecraft directory path
-	minecraftDirectory := settings.MinecraftDirectory
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	// set full filepath
 	fullFilePath := fmt.Sprintf("%v%v", minecraftDirectory, c.Query("filepath"))
@@ -63,11 +75,24 @@ func SaveFile(c *gin.Context) {
 		return
 	}
 
-	// Get settings
-	settings := config.GetValues()
+	// Get minecraft directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
 
-	// Set minecraft directory path
-	minecraftDirectory := settings.MinecraftDirectory
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	// Set full filepath
 	fullFilePath := fmt.Sprintf("%v%v", minecraftDirectory, body.FilePath)

@@ -10,6 +10,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-session/gin-session v3.1.0+incompatible
 	github.com/go-session/session v3.1.2+incompatible
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/xrjr/mcutils v1.4.0
 )
 

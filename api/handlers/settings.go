@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"MCManager/config"
+	"MCManager/utils"
 	"context"
-	"encoding/json"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,8 +22,44 @@ func GetSettings(c *gin.Context) {
 		ContainerId   string `json:"container_id"`
 		ContainerName string `json:"container_name"`
 	}
-	// Get settings
-	settings := config.GetValues()
+
+	// Get settings from the database.
+	var (
+		minecraftDirectory sql.NullString
+		method             sql.NullString
+		containerId        sql.NullString
+		startCommand       sql.NullString
+		world              int
+		mods               int
+		config             int
+		serverProperties   int
+	)
+
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	// Query data from "settings" table.
+	row := db.QueryRow("SELECT directory, method, containerId, startCommand FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory, &method, &containerId, &startCommand)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	// Query data from "backup" table.
+	row2 := db.QueryRow("SELECT world, mods, config, serverProperties FROM backup WHERE id=?", 0)
+	err = row2.Scan(&world, &mods, &config, &serverProperties)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	// Get docker containers if there are any.
 	var dockerContainers []DockerContainers
@@ -42,15 +78,11 @@ func GetSettings(c *gin.Context) {
 	}
 
 	cli.Close()
-	c.JSON(200, gin.H{"settings": gin.H{"minecraft_directory": settings.MinecraftDirectory, "run_method": settings.RunMethod, "docker_container_id": settings.DockerContainerId, "start_command": settings.StartCommand, "backup": settings.Backup}, "docker_containers": dockerContainers})
+	c.JSON(200, gin.H{"settings": gin.H{"minecraft_directory": minecraftDirectory.String, "run_method": method.String, "docker_container_id": containerId.String, "start_command": startCommand.String, "backup": gin.H{"world": utils.Itob(world), "mods": utils.Itob(mods), "config": utils.Itob(config), "server_properties": utils.Itob(serverProperties)}}, "docker_containers": dockerContainers})
 
 }
 
 func ConnectDocker(c *gin.Context) {
-
-	// Get settings from config.json
-	settings := config.GetValues()
-
 	// binding from JSON
 	type Body struct {
 		ContainerId string `json:"container_id" binding:"required"`
@@ -72,54 +104,52 @@ func ConnectDocker(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err})
 	}
 
-	// Save settings in config.json
-	settings.RunMethod = "docker"
-	settings.DockerContainerId = body.ContainerId
-	settings.MinecraftServerIp = containerInfo.NetworkSettings.IPAddress
-	settings.MinecraftDirectory = containerInfo.Mounts[0].Source
-
-	newSettings, err := json.Marshal(settings)
+	// Save settings to database.
+	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		c.String(500, err.Error())
 	}
 
-	err = os.WriteFile("./config.json", newSettings, 0755)
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE settings SET method=?, containerId=?, serverIp=?, directory=?, startCommand=? WHERE id=?", "docker", body.ContainerId, containerInfo.NetworkSettings.IPAddress, containerInfo.Mounts[0].Source, nil, 0)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		c.String(500, err.Error())
 	}
+
+	db.Close()
 
 	cli.Close()
 
-	// c.Status(200)
 	c.JSON(200, containerInfo)
 
 }
 
 func DisconnectDocker(c *gin.Context) {
-	// Get settings from config.json
-	settings := config.GetValues()
+	// Reset values in database.
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		log.Println(err)
+		c.String(500, err.Error())
+		return
+	}
 
-	// Reset docker settings in config.json
-	settings.RunMethod = ""
-	settings.DockerContainerId = ""
-	settings.MinecraftDirectory = ""
-	settings.MinecraftServerIp = ""
-	newSettings, err := json.Marshal(settings)
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE settings SET method=?, containerId=?, serverIp=?, directory=? startCommand=? WHERE id=?", nil, nil, "localhost", nil, nil, 0)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		c.String(500, err.Error())
 	}
-	err = os.WriteFile("./config.json", newSettings, 0644)
-	if err != nil {
-		fmt.Println(err)
-	}
+
+	db.Close()
 
 	c.Status(200)
 }
 
 func SaveCommand(c *gin.Context) {
-	// Get settings from config.json
-	settings := config.GetValues()
-
 	// binding from JSON
 	type Body struct {
 		MinecraftDirectory string `json:"minecraft_directory" binding:"required"`
@@ -186,22 +216,20 @@ func SaveCommand(c *gin.Context) {
 		return
 	}
 
-	// Save new settings.
-	settings.RunMethod = "command"
-	settings.MinecraftServerIp = "localhost"
-	settings.MinecraftDirectory = body.MinecraftDirectory
-	settings.StartCommand = body.StartCommand
-	settings.DockerContainerId = ""
-	newSettings, err := json.Marshal(settings)
+	// Save new settings in the database.
+	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
-		log.Println(err)
 		c.String(500, err.Error())
 	}
-	err = os.WriteFile("./config.json", newSettings, 0644)
+
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE settings SET method=?, serverIp=?, directory=?, startCommand=?, containerId=? WHERE id=?", "command", "localhost", body.MinecraftDirectory, body.StartCommand, nil, 0)
 	if err != nil {
-		log.Println(err)
 		c.String(500, err.Error())
 	}
+
+	db.Close()
 
 	c.Status(200)
 }
@@ -220,33 +248,48 @@ func BackupOption(c *gin.Context) {
 		return
 	}
 
-	// Get settings from config.json
-	settings := config.GetValues()
+	// Convert boolean body.Value to int. 1 if true 0 if false.
+	var value int
 
-	switch body.Option {
-	case "world":
-		settings.Backup.World = *body.Value
-	case "mods":
-		settings.Backup.Mods = *body.Value
-	case "config":
-		settings.Backup.Config = *body.Value
-	case "server_properties":
-		settings.Backup.ServerProperties = *body.Value
+	if *body.Value {
+		value = 1
+	} else {
+		value = 0
 	}
 
-	// Save settings
-	newSettings, err := json.Marshal(settings)
-	if err != nil {
-		log.Println(err)
-		c.String(500, err.Error())
+	if body.Option == "world" || body.Option == "mods" || body.Option == "config" || body.Option == "serverProperties" {
+		err = saveBackupOption(body.Option, value)
+		if err != nil {
+			log.Println(err)
+			c.String(500, err.Error())
+		}
+
+		c.Status(200)
 		return
-	}
-	err = os.WriteFile("./config.json", newSettings, 0644)
-	if err != nil {
-		log.Println(err)
-		c.String(500, err.Error())
+	} else {
+		c.Status(400)
 		return
 	}
 
-	c.Status(200)
+}
+
+func saveBackupOption(option string, value int) error {
+	// Save option to database.
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	statement := fmt.Sprintf("UPDATE backup SET %v=%v WHERE id=%v", option, value, 0)
+
+	_, err = db.Exec(statement)
+	if err != nil {
+		return err
+	}
+
+	db.Close()
+
+	return nil
 }

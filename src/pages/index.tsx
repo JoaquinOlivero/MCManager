@@ -5,7 +5,6 @@ import SingleTabHeader from '../components/SingleTab/SingleTabHeader'
 import styles from '../styles/Home.module.scss'
 import Spinner from '../svg/icons/Spinner'
 import { useRouter } from "next/router";
-import Link from 'next/link'
 import NoSettingsError from '../components/Utils/NoSettingsError'
 
 type Data = {
@@ -95,6 +94,11 @@ const Home: NextPage = () => {
         return
       }
 
+      setServerInfo(null)
+      setIsStarting(false)
+      setIsLoading(false)
+      return
+
     } else {
       setServerInfo(null)
       setIsStarting(false)
@@ -141,9 +145,7 @@ const Home: NextPage = () => {
 
 
     const body = {
-      "rcon_command": rconValue,
-      "rcon_password": serverInfo.rcon_password,
-      "rcon_port": parseInt(serverInfo.rcon_port)
+      "rcon_command": rconValue
     }
 
     fetch("/api/rcon", {
@@ -151,7 +153,7 @@ const Home: NextPage = () => {
       body: JSON.stringify(body)
     }).then(res => {
       if (!res.ok) {
-        return res.text().then(text => { throw new Error(text) })
+        return res.text().then(text => { setRconResponse(text) })
       }
       else {
         return res.text().then(data => {
@@ -161,7 +163,7 @@ const Home: NextPage = () => {
       }
     })
       .catch(err => {
-        setRconResponse(err)
+        setRconResponse(err.msg)
       });
   }
 
@@ -255,7 +257,7 @@ const Home: NextPage = () => {
               <div className={styles.Home_content_actions}>
 
                 {/* RCON */}
-                {serverInfo.rcon_enabled && serverInfo.rcon_port &&
+                {serverInfo.rcon_enabled &&
                   <div className={styles.Home_content_actions_rcon}>
                     <span className={styles.Home_content_rcon_title}>Rcon</span>
                     <input type="text" onChange={(e) => setRconValue(e.target.value)} onSubmit={handleSendRcon} value={rconValue} />

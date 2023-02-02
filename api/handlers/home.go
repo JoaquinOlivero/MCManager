@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"MCManager/config"
 	"MCManager/utils"
 	"context"
-	"encoding/json"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -17,6 +16,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/xrjr/mcutils/pkg/ping"
 	"github.com/xrjr/mcutils/pkg/rcon"
 )
@@ -28,113 +28,219 @@ type ServerInfo struct {
 	StartCommand  string     `json:"start_command"`
 	CommandStatus string     `json:"command_status"`
 	RconEnabled   bool       `json:"rcon_enabled"`
-	RconPort      string     `json:"rcon_port"`
-	RconPassword  string     `json:"rcon_password"`
 	Ping          ping.Infos `json:"ping_data"`
 }
 
 func GetHomeInfo(c *gin.Context) {
+	var (
+		serverInfo   ServerInfo
+		method       sql.NullString // Run method. "docker" or "command".
+		startCommand sql.NullString // Server start cli command.
+		containerId  sql.NullString // Docker container id.
+		serverIp     sql.NullString // serverIp. Defaults to localhost. However, it can be changed in settings if needed.
+		pid          sql.NullInt32  // Last known process id of minecraft server.
+	)
 
-	// Get settings
-	settings := config.GetValues()
-
-	// Initialization of server info variable
-	var serverInfo ServerInfo
-	// Set running method
-	serverInfo.RunMethod = settings.RunMethod
-
-	switch serverInfo.RunMethod {
-	case "docker":
-		serverInfo, err := dockerContainerInfo(settings, serverInfo)
-		if err != nil {
-			c.JSON(500, err)
-		}
-		c.JSON(200, serverInfo)
-
-	case "command":
-		serverInfo, err := commandInfo(settings, serverInfo)
-		if err != nil {
-			c.JSON(500, err)
-		}
-		c.JSON(200, serverInfo)
-	default:
-		c.Status(500)
+	// Query db to retrieve settings data.
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.JSON(500, err)
+		return
 	}
+
+	defer db.Close()
+
+	// Query through settings table to get unique row with id 0, which contains all the settings.
+	row := db.QueryRow("SELECT method, containerId, serverIp, startCommand, serverPid FROM settings WHERE id = ?", 0)
+	err = row.Scan(&method, &containerId, &serverIp, &startCommand, &pid)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, err)
+		return
+	}
+
+	db.Close()
+
+	if method.Valid {
+
+		switch method.String {
+		case "docker":
+			serverInfo, err := dockerContainerInfo(containerId.String, serverIp.String, serverInfo)
+			if err != nil {
+				fmt.Println(err)
+				c.JSON(500, err)
+				return
+			}
+
+			c.JSON(200, serverInfo)
+			return
+
+		case "command":
+			serverInfo, err := commandInfo(serverIp.String, startCommand.String, int(pid.Int32), serverInfo)
+			if err != nil {
+				c.JSON(500, err)
+				return
+			}
+
+			c.JSON(200, serverInfo)
+			return
+
+		default:
+			c.Status(500)
+			return
+		}
+	}
+
+	c.JSON(200, serverInfo)
 }
 
 func ControlServer(c *gin.Context) {
+	// Run method (docker or cli command)
+	var method, containerId, startCliCommand, directory sql.NullString
+	var pid sql.NullInt32 // Last known process id of minecraft server.
 
-	// Get settings
-	settings := config.GetValues()
+	// Database connection and query.
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.JSON(500, err)
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT method, containerId, startCommand, directory, serverPid FROM settings WHERE id = ?", 0)
+	err = row.Scan(&method, &containerId, &startCliCommand, &directory, &pid)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, err)
+		db.Close()
+		return
+	}
+	db.Close()
 
 	action := c.Query("action")
-	method := settings.RunMethod
-	switch method {
+	switch method.String {
 	case "docker":
 		switch action {
 		case "start":
-			res, err := startDockerContainer(settings)
+			res, err := startDockerContainer(containerId.String)
 			if err != nil {
 				c.JSON(res, err)
+				return
 			}
+
 			c.Status(res)
 		case "stop":
-			res, err := stopDockerContainer(settings)
+			res, err := stopDockerContainer(containerId.String)
 			if err != nil {
 				c.JSON(res, err)
+				return
 			}
+
 			c.Status(res)
+			return
 		}
 	case "command":
 		switch action {
 		case "start":
-			res, err := startCommand(settings)
+			res, err := startCommand(startCliCommand.String, directory.String, int(pid.Int32))
 			if err != nil {
 				c.JSON(res, err.Error())
+				return
 			}
+
 			c.Status(res)
+			return
 		case "stop":
-			res, err := stopCommand(settings)
+			res, err := stopCommand(int(pid.Int32))
 			if err != nil {
 				c.JSON(res, err.Error())
+				return
 			}
+
 			c.Status(res)
+			return
 		}
 	}
 }
 
 func SendRconCommand(c *gin.Context) {
+	// Check if rcon is enabled.
+	rconEnable, err := utils.ServerPropertiesLineValue("enable-rcon")
+	if err != nil {
+		log.Println(err)
+		c.String(400, err.Error())
+		return
+	}
+
+	if rconEnable == "false" {
+		c.String(400, "Rcon is not enabled.")
+		return
+	}
+
 	type Body struct {
-		Command  string `json:"rcon_command" binding:"required"`
-		Password string `json:"rcon_password" binding:"required"`
-		Port     int    `json:"rcon_port" binding:"required"`
+		Command string `json:"rcon_command" binding:"required"`
 	}
 
 	// Bind request body
 	var body Body
-	err := c.ShouldBindJSON(&body)
+	err = c.ShouldBindJSON(&body)
 	if err != nil {
 		c.String(400, err.Error())
+		return
 	}
 
-	// Get settings
-	settings := config.GetValues()
+	// Get server ip from database.
+	var serverIp string
 
-	rconResponse, err := rcon.Rcon(settings.MinecraftServerIp, body.Port, body.Password, body.Command)
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	row := db.QueryRow("SELECT serverIp FROM settings WHERE id=?", 0)
+	err = row.Scan(&serverIp)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	// Get rcon port and password from server.properties file.
+	rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
 	if err != nil {
 		c.String(400, err.Error())
+		return
+	}
+
+	rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+
+	rconPortInt, err := strconv.Atoi(rconPort)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+
+	rconResponse, err := rcon.Rcon(serverIp, rconPortInt, rconPassword, body.Command)
+	if err != nil {
+		c.String(400, err.Error())
+		return
 	}
 
 	c.String(200, rconResponse)
 }
 
-func dockerContainerInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, error) {
+func dockerContainerInfo(containerId, serverIp string, serverInfo ServerInfo) (ServerInfo, error) {
 	// connect to docker container and get required info about the container.
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return serverInfo, err
 	}
-	containerInfo, err := cli.ContainerInspect(context.Background(), settings.DockerContainerId)
+	containerInfo, err := cli.ContainerInspect(context.Background(), containerId)
 	if err != nil {
 		return serverInfo, err
 	}
@@ -158,7 +264,7 @@ func dockerContainerInfo(settings config.Config, serverInfo ServerInfo) (ServerI
 
 	// If the docker container is running ping the minecraft server to get data back from it.
 	if serverInfo.DockerStatus == "running" && serverInfo.DockerHealth == "healthy" {
-		pingclient := ping.NewClient(settings.MinecraftServerIp, serverPort)
+		pingclient := ping.NewClient(serverIp, serverPort)
 
 		// Connect opens the connection, and can raise an error for example if the server is unreachable
 		err = pingclient.Connect()
@@ -188,60 +294,57 @@ func dockerContainerInfo(settings config.Config, serverInfo ServerInfo) (ServerI
 			return serverInfo, err
 		}
 
-		rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
-		if err != nil {
-			return serverInfo, err
-		}
-
-		rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
-		if err != nil {
-			return serverInfo, err
-		}
-
 		rconBool, err := strconv.ParseBool(rcon)
 		if err != nil {
 			return serverInfo, err
 		}
 		serverInfo.RconEnabled = rconBool
-		serverInfo.RconPort = rconPort
-		serverInfo.RconPassword = rconPassword
 	}
+
+	serverInfo.RunMethod = "docker"
 
 	return serverInfo, nil
 }
 
-func startDockerContainer(settings config.Config) (int, error) {
+func startDockerContainer(containerId string) (int, error) {
 	// connect with docker container
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return 500, err
 	}
+
+	log.Println("Starting Minecraft server.")
+
 	// start container
-	err = cli.ContainerStart(context.Background(), settings.DockerContainerId, types.ContainerStartOptions{})
+	err = cli.ContainerStart(context.Background(), containerId, types.ContainerStartOptions{})
 	if err != nil {
 		return 500, err
 	}
+
 	cli.Close()
 	return 200, nil
 }
 
-func stopDockerContainer(settings config.Config) (int, error) {
+func stopDockerContainer(containerId string) (int, error) {
 	// connect with docker container
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return 500, err
 	}
+
+	log.Println("Stopping Minecraft server.")
+
 	// 	Stop container
-	err = cli.ContainerStop(context.Background(), settings.DockerContainerId, nil)
+	err = cli.ContainerStop(context.Background(), containerId, nil)
 	if err != nil {
-		fmt.Println(err)
+		return 500, err
 	}
+
 	cli.Close()
 	return 200, nil
 }
 
-func commandInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, error) {
-
+func commandInfo(serverIp, startCommand string, pid int, serverInfo ServerInfo) (ServerInfo, error) {
 	// Get server-port from server.properties file.
 	serverPropertiesPort, err := utils.ServerPropertiesLineValue("server-port")
 	if err != nil {
@@ -253,14 +356,14 @@ func commandInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, err
 		return serverInfo, err
 	}
 
-	pingclient := ping.NewClient(settings.MinecraftServerIp, serverPort)
+	pingclient := ping.NewClient(serverIp, serverPort)
 
 	// Connect opens the connection, and can raise an error for example if the server is unreachable
 	err = pingclient.Connect()
 	// An error means that the server couldn't be pinged. However, this could mean that the server is either starting or it's offline.
 	if err != nil {
 		// Check if the server process is running. In this block scope if the server is running, it means that the server is starting.
-		process, err := os.FindProcess(settings.Pid)
+		process, err := os.FindProcess(pid)
 		if err != nil {
 			log.Printf("Failed to find process: %s\n", err)
 		} else {
@@ -299,36 +402,25 @@ func commandInfo(settings config.Config, serverInfo ServerInfo) (ServerInfo, err
 			return serverInfo, err
 		}
 
-		rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
-		if err != nil {
-			return serverInfo, err
-		}
-
-		rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
-		if err != nil {
-			return serverInfo, err
-		}
-
 		rconBool, err := strconv.ParseBool(rcon)
 		if err != nil {
 			return serverInfo, err
 		}
 		serverInfo.RconEnabled = rconBool
-		serverInfo.RconPort = rconPort
-		serverInfo.RconPassword = rconPassword
 
 		serverInfo.CommandStatus = "online"
 	}
 
-	serverInfo.StartCommand = settings.StartCommand
+	serverInfo.StartCommand = startCommand
+	serverInfo.RunMethod = "command"
 
 	return serverInfo, nil
 }
 
-func startCommand(settings config.Config) (int, error) {
+func startCommand(startCommand, directory string, serverPid int) (int, error) {
 	log.Println("Starting Minecraft Server")
 	// Check if the server process is already running.
-	process, err := os.FindProcess(settings.Pid)
+	process, err := os.FindProcess(serverPid)
 	if err != nil {
 		log.Printf("Failed to find process: %s\n", err)
 	} else {
@@ -341,10 +433,10 @@ func startCommand(settings config.Config) (int, error) {
 	}
 
 	// Get start command from settings and split it.
-	args := strings.Split(settings.StartCommand, " ")
+	args := strings.Split(startCommand, " ")
 
 	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Dir = settings.MinecraftDirectory
+	cmd.Dir = directory
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
 		Pgid:    0,
@@ -356,29 +448,29 @@ func startCommand(settings config.Config) (int, error) {
 		return 400, err
 	}
 
-	// Save the process id to settings.
-	settings.Pid = cmd.Process.Pid // new process id.
+	// Insert new pid into the database.
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		return 500, err
+	}
 
-	newSettings, err := json.Marshal(settings)
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE settings SET serverPid = ? WHERE id = ?", cmd.Process.Pid, 0)
 	if err != nil {
-		log.Println(err)
 		return 500, err
 	}
-	err = os.WriteFile("./config.json", newSettings, 0644)
-	if err != nil {
-		log.Println(err)
-		return 500, err
-	}
+
+	db.Close()
 
 	process.Release()
 
 	return 200, nil
 }
 
-func stopCommand(settings config.Config) (int, error) {
-
+func stopCommand(serverPid int) (int, error) {
 	// Check if the server process is running.
-	process, err := os.FindProcess(settings.Pid)
+	process, err := os.FindProcess(serverPid)
 	if err != nil {
 		log.Printf("Failed to find process: %s\n", err)
 		return 500, err

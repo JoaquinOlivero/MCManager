@@ -4,7 +4,7 @@
 # Backend
 /api/dockerresponse.json
 /api/tmp/
-/api/config.json
+/api/config.db
 /api/go-build.txt
 
 

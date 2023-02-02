@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"MCManager/config"
 	"MCManager/utils"
 	"archive/zip"
+	"database/sql"
 	"fmt"
 	"io"
 	"io/fs"
@@ -16,8 +16,24 @@ import (
 )
 
 func Backup(c *gin.Context) {
-	// Get settings
-	settings := config.GetValues()
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
 
 	// Get world name
 	worldName, err := utils.ServerPropertiesLineValue("level-name")
@@ -81,25 +97,25 @@ func Backup(c *gin.Context) {
 	}
 
 	// Backup config directory.
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/config", walkFunc)
+	err = filepath.WalkDir(minecraftDirectory+"/config", walkFunc)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Backup current world directory.
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/"+worldName, walkFunc)
+	err = filepath.WalkDir(minecraftDirectory+"/"+worldName, walkFunc)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Backup mods directory.
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/mods", walkFunc)
+	err = filepath.WalkDir(minecraftDirectory+"/mods", walkFunc)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Backup server.properties file
-	err = filepath.WalkDir(settings.MinecraftDirectory+"/server.properties", walkFunc)
+	err = filepath.WalkDir(minecraftDirectory+"/server.properties", walkFunc)
 	if err != nil {
 		fmt.Println(err)
 	}
