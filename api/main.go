@@ -22,10 +22,12 @@ import (
 
 func main() {
 	portFlag := flag.String("p", "", "-p flag defines the port to be used by MCManager. Defaults to 5555.")
+	devFlag := flag.Bool("dev", false, "Used to proxy requests to the front-end running in dev mode in port 3002. Therefore, not using the front-end static files in the build folder.")
 
 	flag.Parse()
 
 	port := *portFlag
+	dev := *devFlag
 
 	if port == "" {
 		port = "5555"
@@ -99,24 +101,31 @@ func main() {
 		}
 	}
 
-	log.Printf("Server started on port: %v\n", port)
-	// r.NoRoute(ReverseProxy)
-	r.NoRoute(func(c *gin.Context) {
-		c.File("out/index.html")
-	})
-	r.Run(":" + port)
-}
+	// If the dev flag is not used, the back-end will serve the front-end static files in the "out" directory. Otherwise, it will proxy the requests to the port 3002 which is the port that the front-end uses when in dev mode.
+	if !dev {
+		r.NoRoute(func(c *gin.Context) {
+			c.File("out/index.html")
+		})
 
-func ReverseProxy(c *gin.Context) {
-	remote, _ := url.Parse("http://localhost:3002")
-	proxy := httputil.NewSingleHostReverseProxy(remote)
-	proxy.Director = func(req *http.Request) {
-		req.Header = c.Request.Header
-		req.Host = remote.Host
-		req.URL = c.Request.URL
-		req.URL.Scheme = remote.Scheme
-		req.URL.Host = remote.Host
+		log.Printf("Server started on port: %v\n", port)
+	} else {
+		// Proxy to the front-end running in dev mode.
+		r.NoRoute(func(c *gin.Context) {
+			remote, _ := url.Parse("http://localhost:3002")
+			proxy := httputil.NewSingleHostReverseProxy(remote)
+			proxy.Director = func(req *http.Request) {
+				req.Header = c.Request.Header
+				req.Host = remote.Host
+				req.URL = c.Request.URL
+				req.URL.Scheme = remote.Scheme
+				req.URL.Host = remote.Host
+			}
+
+			proxy.ServeHTTP(c.Writer, c.Request)
+		})
+
+		log.Printf("[DEV]Server started on port: %v\n", port)
 	}
 
-	proxy.ServeHTTP(c.Writer, c.Request)
+	r.Run(":" + port)
 }
