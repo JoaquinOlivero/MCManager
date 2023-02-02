@@ -59,8 +59,14 @@ func main() {
 
 		api.POST("/login", handler.Login)
 		api.GET("/check", handler.CheckSession)
-		api.POST("/password", middleware.Session, handler.ChangePassword)
 		api.GET("/logout", middleware.Session, handler.Logout)
+
+		password := api.Group("/password")
+		{
+			password.POST("/set", handler.SetPassword)
+			password.GET("/check", handler.CheckSetPassword)
+			password.POST("/change", middleware.Session, handler.ChangePassword)
+		}
 
 		dir := api.Group("/dir")
 		dir.Use(middleware.Session)

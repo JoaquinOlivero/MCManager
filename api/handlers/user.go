@@ -61,6 +61,85 @@ func Logout(c *gin.Context) {
 	c.Status(200)
 }
 
+func SetPassword(c *gin.Context) {
+	type Body struct {
+		Password string `json:"password" binding:"required"`
+	}
+
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+
+	// Check if password has already been set.
+	var setPassword int
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT setPassword FROM settings WHERE id=?", 0)
+	err = row.Scan(&setPassword)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	if setPassword == 1 {
+		c.String(401, "Password has already been set.")
+		return
+	}
+
+	// Update password in database and set "setPassword" to 1 (true).
+	_, err = db.Exec("UPDATE settings SET password=?, setPassword=? WHERE id=?", body.Password, 1, 0)
+	if err != nil {
+		c.String(500, err.Error())
+	}
+
+	db.Close()
+
+	// Sign in user.
+	store := ginsession.FromContext(c)
+	store.Set("id", store.SessionID())
+	store.Save()
+
+	c.Status(200)
+}
+
+func CheckSetPassword(c *gin.Context) {
+	// Check if password has already been set
+	var setPassword int
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT setPassword FROM settings WHERE id=?", 0)
+	err = row.Scan(&setPassword)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	if setPassword == 0 {
+		c.Status(400)
+		return
+	}
+
+	db.Close()
+
+	c.Status(200)
+}
+
 func ChangePassword(c *gin.Context) {
 	type Body struct {
 		OldPassword string `json:"old_password" binding:"required"`
@@ -98,14 +177,14 @@ func ChangePassword(c *gin.Context) {
 		return
 	}
 
-	db.Close()
-
 	// Save new password
 	_, err = db.Exec("UPDATE settings SET password=? WHERE id=?", body.NewPassword, 0)
 	if err != nil {
 		c.String(500, err.Error())
 		return
 	}
+
+	db.Close()
 
 	c.Status(200)
 }

@@ -13,7 +13,7 @@ const ChangePassword = () => {
 
         const body = { "old_password": oldPassword, "new_password": newPassword }
 
-        fetch("/api/password", {
+        fetch("/api/password/change", {
             method: "POST",
             body: JSON.stringify(body)
         }).then(res => {
