@@ -96,17 +96,28 @@ const Mods: NextPage = () => {
 
 export default Mods
 
+const getMods = (setMods: Function) => {
 
-const getMods = async (setMods: Function) => {
-    const res = await fetch("/api/mods")
-    if (res.status === 200) {
-        const data = await res.json()
-        const sortedData = data.sort((a: Mod, b: Mod) => a.fileName.localeCompare(b.fileName))
-        await setMods(sortedData)
-    }
+    fetch("/api/mods", {
+        method: "GET",
+        credentials: "include"
+    }).then(res => {
+        if (!res.ok) {
+            return res.text().then(text => { throw new Error(text); })
+        }
+        else {
+            if (res.status === 204) {
+                return setMods([])
+            }
 
-    if (res.status === 204) {
-        setMods([])
-    }
+            if (res.status === 200) {
+                return res.json().then((json) => {
+                    return setMods(json)
+                })
+            }
+        }
+    })
+        .catch(err => {
+            console.log(err.message)
+        })
 }
-
