@@ -86,10 +86,20 @@ func main() {
 		settings.Use(middleware.Session)
 		{
 			settings.GET("/", handler.GetSettings)
-			settings.POST("/connect-docker", handler.ConnectDocker)
-			settings.POST("/disconnect-docker", handler.DisconnectDocker)
 			settings.POST("/save-command", handler.SaveCommand)
 			settings.POST("/backup", handler.BackupOption)
+			settings.GET("/check", handler.CheckSettings)
+
+			docker := settings.Group("/docker")
+			{
+				docker.POST("/connect", handler.ConnectDocker)
+				docker.POST("/disconnect", handler.DisconnectDocker)
+			}
+
+			command := settings.Group("/command")
+			{
+				command.POST("/save", handler.SaveCommand)
+			}
 		}
 
 		edit := api.Group("/edit")

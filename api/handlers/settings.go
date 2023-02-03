@@ -138,7 +138,7 @@ func DisconnectDocker(c *gin.Context) {
 
 	defer db.Close()
 
-	_, err = db.Exec("UPDATE settings SET method=?, containerId=?, serverIp=?, directory=? startCommand=? WHERE id=?", nil, nil, "localhost", nil, nil, 0)
+	_, err = db.Exec("UPDATE settings SET method=?, containerId=?, serverIp=?, directory=?, startCommand=? WHERE id=?", nil, nil, "localhost", nil, nil, 0)
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
@@ -271,6 +271,40 @@ func BackupOption(c *gin.Context) {
 		return
 	}
 
+}
+
+func CheckSettings(c *gin.Context) {
+	// Get settings from the database.
+	var (
+		minecraftDirectory sql.NullString
+		method             sql.NullString
+	)
+
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	// Query data from "settings" table.
+	row := db.QueryRow("SELECT directory, method FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory, &method)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	if !minecraftDirectory.Valid && !method.Valid {
+		db.Close()
+		c.Status(204)
+		return
+	}
+
+	db.Close()
+
+	c.Status(200)
 }
 
 func saveBackupOption(option string, value int) error {
