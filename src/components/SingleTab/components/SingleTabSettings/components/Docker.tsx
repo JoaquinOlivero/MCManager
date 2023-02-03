@@ -1,3 +1,4 @@
+import { useDataContext } from '../../../../../contexts/DataContext'
 import { useState } from 'react'
 import styles from '../../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss'
 
@@ -24,12 +25,12 @@ const Docker = ({ settings, dockerContainers, getSettings }: Props) => {
     const [dockerContainerOption, setDockerContainerOption] = useState<string>('default')
     const [isConnecting, setIsConnecting] = useState<boolean>(false)
     const [isDisconnecting, setIsDisconnecting] = useState<boolean>(false)
-
+    const { completeSettings, setCompleteSettings } = useDataContext()
 
     const handleConnectDockerContainer = async () => {
         setIsConnecting(true)
         if (dockerContainerOption === "default") return
-        const res = await fetch("/api/settings/connect-docker", {
+        const res = await fetch("/api/settings/docker/connect", {
             method: "POST",
             body: JSON.stringify({ "container_id": dockerContainerOption })
         })
@@ -39,11 +40,12 @@ const Docker = ({ settings, dockerContainers, getSettings }: Props) => {
         }
         await getSettings()
         setIsConnecting(false)
+        if (completeSettings === false) setCompleteSettings(true)
     }
 
     const handleDisconnectDockerContainer = async () => {
         setIsDisconnecting(true)
-        const res = await fetch("/api/settings/disconnect-docker", {
+        const res = await fetch("/api/settings/docker/disconnect", {
             method: "POST",
         })
 
@@ -52,6 +54,7 @@ const Docker = ({ settings, dockerContainers, getSettings }: Props) => {
         }
         await getSettings()
         setIsDisconnecting(false)
+        setCompleteSettings(false)
     }
     return (
         <div className={styles.SingleTabSettings_option_content}>

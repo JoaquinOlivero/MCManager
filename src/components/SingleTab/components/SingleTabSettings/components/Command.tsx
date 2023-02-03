@@ -1,4 +1,4 @@
-import { stringify } from 'querystring'
+import { useDataContext } from '../../../../../contexts/DataContext'
 import { useState } from 'react'
 import styles from '../../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss'
 
@@ -19,6 +19,7 @@ const Command = ({ settings, getSettings }: Props) => {
     const [startCommand, setStartCommand] = useState<string>(settings.run_method !== "docker" ? settings.start_command : "")
     const [isSaving, setisSaving] = useState<boolean>(false)
     const [responseError, setResponseError] = useState<null | string>(null)
+    const { completeSettings, setCompleteSettings } = useDataContext()
 
     const handleSaveDirAndCommand = () => {
         if (mcDir === "" || startCommand === "") return
@@ -26,7 +27,7 @@ const Command = ({ settings, getSettings }: Props) => {
         setisSaving(true)
         setResponseError(null)
 
-        fetch("/api/settings/save-command", {
+        fetch("/api/settings/command/save", {
             method: "POST",
             body: JSON.stringify({ "minecraft_directory": mcDir, "start_command": startCommand })
         }).then(res => {
@@ -35,6 +36,7 @@ const Command = ({ settings, getSettings }: Props) => {
             }
             getSettings()
             setisSaving(false)
+            if (completeSettings === false) setCompleteSettings(true)
         }).catch(err => {
             setResponseError(err.message)
             setisSaving(false)

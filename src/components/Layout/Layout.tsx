@@ -17,14 +17,22 @@ const Layout = ({ children }: Props) => {
     const menuContentTabsRef = useRef<HTMLDivElement>(null)
     const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
     const { route, push } = useRouter()
-    const { editFilepath, setEditFilepath, signedIn, checkSession } = useDataContext()
+    const { editFilepath, setEditFilepath, signedIn, completeSettings, checkSession, checkSettings } = useDataContext()
 
 
     useEffect(() => {
         if (signedIn !== true) {
             if (signedIn === false) push("/login")
         }
+
+        if (signedIn && completeSettings === null) {
+            checkSettings()
+        }
     }, [signedIn])
+
+    useEffect(() => {
+        if (completeSettings === false && route !== "/") push("/settings")
+    }, [completeSettings])
 
     useEffect(() => {
         checkSession()
@@ -82,11 +90,11 @@ const Layout = ({ children }: Props) => {
             {/* Left menu persistent layout */}
             {signedIn && !route.includes("login") ?
                 <>
-                    <div className={styles.Menu} ref={menuRef}>
+                    <div className={styles.Menu} ref={menuRef} >
                         <Link href='/'>
                             <h2>MCManager</h2>
                         </Link>
-                        <div className={styles.Menu_content}>
+                        <div className={styles.Menu_content} style={completeSettings === false ? { pointerEvents: "none", color: "rgba(255,255,255,0.2)" } : {}}>
                             <div className={styles.Menu_responsive_content} onClick={handleClickResponsiveMenu}>
                                 <MenuBurger />
                                 <span>Menu</span>

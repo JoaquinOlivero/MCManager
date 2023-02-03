@@ -14,6 +14,9 @@ type dataContextType = {
     setSignedIn: (value: boolean) => void;
     checkSession: () => void;
     checkPasswordExists: () => void;
+    checkSettings: () => void;
+    completeSettings: boolean | null;
+    setCompleteSettings: (value: boolean) => void;
     editFilepath: string | null
     setEditFilepath: (value: string | null) => void;
 }
@@ -25,6 +28,9 @@ const dataContextDefaultValue: dataContextType = {
     setSignedIn: () => { },
     checkSession: () => { },
     checkPasswordExists: () => { },
+    checkSettings: () => { },
+    completeSettings: null,
+    setCompleteSettings: () => { },
     editFilepath: null,
     setEditFilepath: () => { },
 }
@@ -43,6 +49,7 @@ export function DataProvider({ children }: Props) {
     const [passwordExists, setPasswordExists] = useState<boolean | null>(null)
     const [signedIn, setSignedIn] = useState<boolean | null>(null)
     const [editFilepath, setEditFilepath] = useState<string | null>(null)
+    const [completeSettings, setCompleteSettings] = useState<boolean | null>(null)
     // const [mods, setMods] = useState<Array<Mod> | null>(null)
 
     const checkSession = () => {
@@ -75,7 +82,6 @@ export function DataProvider({ children }: Props) {
                 return false
             }
             else {
-                console.log('a')
                 setPasswordExists(true)
                 return true
             }
@@ -86,6 +92,19 @@ export function DataProvider({ children }: Props) {
             })
     }
 
+    const checkSettings = () => {
+        fetch("/api/settings/check", {
+            method: "GET",
+            credentials: "include"
+        }).then(res => {
+            if (!res.ok) return
+
+            if (res.status === 204) return setCompleteSettings(false)
+
+            return setCompleteSettings(true)
+        })
+    }
+
     const value = {
         // mods
         signedIn,
@@ -94,6 +113,9 @@ export function DataProvider({ children }: Props) {
         setPasswordExists,
         checkSession,
         checkPasswordExists,
+        checkSettings,
+        completeSettings,
+        setCompleteSettings,
         editFilepath,
         setEditFilepath
     }
