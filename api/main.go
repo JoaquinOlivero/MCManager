@@ -73,6 +73,7 @@ func main() {
 		{
 			dir.GET("/:name", handler.GetDirectory)
 			dir.POST("/remove", handler.RemoveFiles)
+			dir.POST("/extract", handler.ExtractLogFiles)
 		}
 		mods := api.Group("/mods")
 		mods.Use(middleware.Session)

@@ -215,3 +215,7 @@ func Itob(i int) bool {
 
 	return false
 }
+
+func FileNameWithoutExtSliceNotation(fileName string) string {
+	return fileName[:len(fileName)-len(filepath.Ext(fileName))]
+}

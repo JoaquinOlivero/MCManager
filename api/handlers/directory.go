@@ -3,10 +3,14 @@ package handler
 import (
 	"MCManager/utils"
 	"bufio"
+	"compress/gzip"
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -124,6 +128,102 @@ func RemoveFiles(c *gin.Context) {
 			}
 		}
 
+	}
+
+	c.Status(200)
+}
+
+func ExtractLogFiles(c *gin.Context) {
+	// Binding from JSON
+	type Body struct {
+		FileList []string `json:"files" binding:"required"`
+	}
+
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(500, err)
+		return
+	}
+
+	// Get Minecraft server files directory from db.
+	var minecraftDirectory string
+	db, err := sql.Open("sqlite3", "config.db")
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	defer db.Close()
+
+	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
+	err = row.Scan(&minecraftDirectory)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+
+	db.Close()
+
+	// Loop through files and remove them from the directory.
+	for _, file := range body.FileList {
+		// Check that the file to be extracted has the .gz extension
+		if filepath.Ext(file) != ".gz" {
+			log.Println(file + " can't be extracted.")
+			continue
+		}
+
+		filePath := fmt.Sprintf("%v%v%v", minecraftDirectory, "/logs/", file)
+
+		// Check that file exists.
+		_, err := os.Lstat(filePath)
+		if err != nil {
+			var pErr *os.PathError
+			if errors.As(err, &pErr) {
+				errMessage := fmt.Sprintf(`"%v" %v`, file, pErr.Err)
+				log.Println(errMessage)
+				c.String(500, errMessage)
+			}
+			break
+		}
+
+		log.Println("Extracting: " + filePath)
+
+		// Open .gz file
+		gzFile, err := os.Open(filePath)
+		if err != nil {
+			log.Println(err)
+			c.String(500, err.Error())
+			break
+		}
+
+		// Create reader to read the file.
+		reader, err := gzip.NewReader(gzFile)
+		if err != nil {
+			log.Println(err)
+			c.String(500, err.Error())
+			break
+		}
+		defer reader.Close()
+
+		// Create new file to write the extracted data
+		filename := utils.FileNameWithoutExtSliceNotation(file)
+		outfile, err := os.Create(minecraftDirectory + "/logs/" + filename)
+		if err != nil {
+			log.Println(err)
+			c.String(500, err.Error())
+			break
+		}
+		defer outfile.Close()
+
+		// Copy the data from the .gz file to the new file
+		_, err = io.Copy(outfile, reader)
+		if err != nil {
+			log.Println(err)
+			c.String(500, err.Error())
+			break
+		}
 	}
 
 	c.Status(200)
