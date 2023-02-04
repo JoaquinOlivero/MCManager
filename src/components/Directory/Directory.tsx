@@ -117,10 +117,25 @@ const Directory = ({ tabType }: Props) => {
         }
     }
 
+    const handleExtractFile = () => {
+        const body = { "files": selectedFiles }
+        fetch("/api/dir/extract", {
+            method: "POST",
+            body: JSON.stringify(body)
+        }).then((res) => {
+            if (!res.ok) return res.text().then(text => { throw new Error(text) })
+
+            if (res.status === 200) return getDir(tabType, setDirData, setSettings)
+
+        }).catch((err) => {
+            console.log(err.message)
+        });
+    }
+
     // single tab layout
     return (
         <>
-            <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} removeFiles={handleRemoveFile} selectedFiles={selectedFiles} />}>
+            <SingleTab header={<SingleTabHeader tabType={tabType} editFile={handleEditFile} removeFiles={handleRemoveFile} selectedFiles={selectedFiles} extractFile={handleExtractFile} />}>
                 {settings ?
                     <>
                         <SingleTabDirectory dir={currentDir} selectedFiles={selectedFiles} setSelectedFiles={setSelectedFiles} error={error} />

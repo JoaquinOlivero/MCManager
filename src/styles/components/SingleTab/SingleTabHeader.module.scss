@@ -72,6 +72,7 @@
     }
     .SingleTabHeader_crud_btn {
       cursor: pointer;
+      height: 35px;
       display: flex;
       align-items: center;
       gap: 5px;
@@ -88,7 +89,7 @@
       -ms-user-select: none;
     }
     svg {
-      width: 18px;
+      height: 20px;
     }
     .SingleTabHeader_crud_add {
       padding: 0;

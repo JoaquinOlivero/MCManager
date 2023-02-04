@@ -7,6 +7,8 @@ import Arrow from "../../svg/icons/Arrow";
 import Edit from "../../svg/icons/Edit";
 import Save from "../../svg/icons/Save";
 import Trash from "../../svg/icons/Trash";
+import View from "../../svg/icons/View";
+import Zip from "../../svg/icons/Zip";
 
 type UploadStatus = {
   uploading: boolean;
@@ -22,9 +24,10 @@ type Props = {
   editFile?: Function;
   uploadStatus?: UploadStatus;
   saveFile?: () => Promise<void>;
+  extractFile?: Function;
 };
 
-const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, editFile, uploadStatus, saveFile }: Props) => {
+const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, editFile, uploadStatus, saveFile, extractFile }: Props) => {
   const router = useRouter();
 
   const breadcrumbs = useMemo(
@@ -82,10 +85,25 @@ const SingleTabHeader = ({ tabType, selectedFiles, removeFiles, uploadFiles, edi
           </div>
         )}
 
+        {tabType === "logs" && extractFile &&
+          <div className={`${styles.SingleTabHeader_crud_edit} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles && selectedFiles.find(file => file.endsWith(".gz")) ? 1 : 0.5, pointerEvents: selectedFiles ? "visible" : "none" }} onClick={() => extractFile()}>
+            <Zip />
+            <span>Extract</span>
+          </div>
+        }
         {editFile && (
           <div className={`${styles.SingleTabHeader_crud_edit} ${styles.SingleTabHeader_crud_btn}`} style={{ opacity: selectedFiles && selectedFiles.length === 1 && selectedFiles[0] ? 1 : 0.5, cursor: selectedFiles && selectedFiles.length === 1 && selectedFiles[0] ? "pointer" : "default", pointerEvents: selectedFiles && selectedFiles.length === 1 && selectedFiles[0] ? "visible" : "none" }} onClick={() => editFile()}>
-            <Edit />
-            <span>Edit</span>
+            {tabType === "logs" ?
+              <>
+                <View />
+                <span>View</span>
+              </>
+              :
+              <>
+                <Edit />
+                <span>Edit</span>
+              </>
+            }
           </div>
         )}
         {removeFiles && (
