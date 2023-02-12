@@ -4,6 +4,7 @@ import (
 	handler "MCManager/handlers"
 	"MCManager/middleware"
 	"MCManager/utils"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -21,21 +22,28 @@ import (
 )
 
 func main() {
-	portFlag := flag.String("p", "", "-p flag defines the port to be used by MCManager. Defaults to 5555.")
-	devFlag := flag.Bool("dev", false, "Used to proxy requests to the front-end running in dev mode in port 3002. Therefore, not using the front-end static files in the build folder.")
+	// logging to file.
+	file, err := os.OpenFile("log.txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal((err))
+	}
+	defer file.Close()
+
+	log.SetOutput(file)
+
+	// flags.
+	port := flag.String("p", "", "-p flag defines the port to be used by MCManager. Defaults to 5555.")
+	dev := flag.Bool("dev", false, "Used to proxy requests to the front-end running in dev mode in port 3002. Therefore, not using the front-end static files in the build folder.")
 
 	flag.Parse()
 
-	port := *portFlag
-	dev := *devFlag
-
-	if port == "" {
-		port = "5555"
+	if *port == "" {
+		*port = "5555"
 	}
 
-	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", port)
+	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", *port)
 
-	err := utils.InitializeDb()
+	err = utils.InitializeDb()
 	if err != nil {
 		log.Println(err)
 	}
@@ -118,12 +126,13 @@ func main() {
 	}
 
 	// If the dev flag is not used, the back-end will serve the front-end static files in the "out" directory. Otherwise, it will proxy the requests to the port 3002 which is the port that the front-end uses when in dev mode.
-	if !dev {
+	if !*dev {
 		r.NoRoute(func(c *gin.Context) {
 			c.File("out/index.html")
 		})
 
-		log.Printf("Server started on port: %v\n", port)
+		log.Printf("Server started on port: %v\n", *port)
+		fmt.Printf("Server started on port: %v\n", *port)
 	} else {
 		// Proxy to the front-end running in dev mode.
 		r.NoRoute(func(c *gin.Context) {
@@ -140,8 +149,9 @@ func main() {
 			proxy.ServeHTTP(c.Writer, c.Request)
 		})
 
-		log.Printf("[DEV]Server started on port: %v\n", port)
+		log.Printf("[DEV]Server started on port: %v\n", *port)
+		fmt.Printf("[DEV]Server started on port: %v\n", *port)
 	}
 
-	r.Run(":" + port)
+	r.Run(":" + *port)
 }

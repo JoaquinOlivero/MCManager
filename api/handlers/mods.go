@@ -3,6 +3,9 @@ package handler
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
+	// "fmt"
 	"io/fs"
 	"net/http"
 	"os"
@@ -44,7 +47,7 @@ func Mods(c *gin.Context) {
 
 	walkFunc := func(root string, info fs.DirEntry, err error) error {
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return nil
 		}
 
@@ -61,7 +64,7 @@ func Mods(c *gin.Context) {
 
 	err = filepath.WalkDir(modsDirectory, walkFunc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
