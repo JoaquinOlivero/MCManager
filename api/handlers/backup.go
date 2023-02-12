@@ -4,9 +4,9 @@ import (
 	"MCManager/utils"
 	"archive/zip"
 	"database/sql"
-	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +38,7 @@ func Backup(c *gin.Context) {
 	// Get world name
 	worldName, err := utils.ServerPropertiesLineValue("level-name")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	// Get current time to measure total file compression time.
@@ -54,11 +54,11 @@ func Backup(c *gin.Context) {
 		if os.IsNotExist(err) {
 			err = os.Mkdir("backup", 0755)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				return
 			}
 		} else {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -70,7 +70,7 @@ func Backup(c *gin.Context) {
 	defer w.Close()
 
 	walkFunc := func(absPath string, info fs.DirEntry, err error) error {
-		fmt.Printf("Compressing: %#v\n", absPath)
+		log.Printf("Compressing: %#v\n", absPath)
 		if err != nil {
 			return err
 		}
@@ -99,42 +99,42 @@ func Backup(c *gin.Context) {
 	// Backup config directory.
 	err = filepath.WalkDir(minecraftDirectory+"/config", walkFunc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	// Backup current world directory.
 	err = filepath.WalkDir(minecraftDirectory+"/"+worldName, walkFunc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	// Backup mods directory.
 	err = filepath.WalkDir(minecraftDirectory+"/mods", walkFunc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	// Backup server.properties file
 	err = filepath.WalkDir(minecraftDirectory+"/server.properties", walkFunc)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	// Check error on close for both the archive zip and the actual zip file.
 	err = w.Close()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	err = backupFile.Close()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	// Time it took to compress all files.
 	t := time.Now()
 	elapsed := t.Sub(timeStart)
-	fmt.Printf("Backup is ready. Compressing all the files took: %v\n", elapsed)
+	log.Printf("Backup is ready. Compressing all the files took: %v\n", elapsed)
 
 	c.String(200, filename)
 }

@@ -6,6 +6,7 @@
 /api/tmp/
 /api/config.db
 /api/go-build.txt
+/api/log.txt
 
 
 # Frontend
@@ -13,6 +14,7 @@
 /src/node_modules
 /src/.pnp
 /src/.pnp.js
+/src/yarn.lock
 
 # testing
 /src//coverage

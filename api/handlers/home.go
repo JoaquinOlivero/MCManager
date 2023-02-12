@@ -5,7 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+
+	// "fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -54,7 +55,7 @@ func GetHomeInfo(c *gin.Context) {
 	row := db.QueryRow("SELECT method, containerId, serverIp, startCommand, serverPid FROM settings WHERE id = ?", 0)
 	err = row.Scan(&method, &containerId, &serverIp, &startCommand, &pid)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(500, err)
 		return
 	}
@@ -67,7 +68,7 @@ func GetHomeInfo(c *gin.Context) {
 		case "docker":
 			serverInfo, err := dockerContainerInfo(containerId.String, serverIp.String, serverInfo)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				c.JSON(500, err)
 				return
 			}
@@ -111,7 +112,7 @@ func ControlServer(c *gin.Context) {
 	row := db.QueryRow("SELECT method, containerId, startCommand, directory, serverPid FROM settings WHERE id = ?", 0)
 	err = row.Scan(&method, &containerId, &startCliCommand, &directory, &pid)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(500, err)
 		db.Close()
 		return

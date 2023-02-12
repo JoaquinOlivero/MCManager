@@ -128,7 +128,6 @@ func ServerPropertiesLineValue(key string) (string, error) {
 
 	file, err := os.Open(serverPropertiesPath)
 	if err != nil {
-		fmt.Println(err) // log
 		return "", err
 	}
 
@@ -150,7 +149,6 @@ func ServerPropertiesLineValue(key string) (string, error) {
 		}
 	}
 	if err = file.Close(); err != nil {
-		fmt.Printf("Could not close the file due to this %s error \n", err) // log
 		return "", err
 	}
 

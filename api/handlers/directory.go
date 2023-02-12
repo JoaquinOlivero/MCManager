@@ -111,7 +111,7 @@ func RemoveFiles(c *gin.Context) {
 		filePath := fmt.Sprintf("%v%v%v", minecraftDirectory, body.Directory, file)
 		fileStat, err := os.Lstat(filePath)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		if fileStat.IsDir() {
@@ -240,7 +240,7 @@ func worldDir(minecraftDirectory string) (interface{}, error) {
 		if noFile {
 			err = errors.New("no such file or directory")
 		}
-		fmt.Println(err) // log
+		log.Println(err)
 		return nil, err
 	}
 
@@ -262,13 +262,13 @@ func worldDir(minecraftDirectory string) (interface{}, error) {
 		}
 	}
 	if err = file.Close(); err != nil {
-		fmt.Printf("Could not close the file due to this %s error \n", err) // log
+		log.Printf("Could not close the file due to this %s error \n", err)
 	}
 
 	worldDir := fmt.Sprintf("%v/%v", minecraftDirectory, worldDirName)
 	directoryFiles, err := utils.DirectoryTree(worldDir)
 	if err != nil {
-		fmt.Println(err) // log
+		log.Println(err)
 		return nil, err
 	}
 
@@ -281,7 +281,7 @@ func configDir(minecraftDirectory string) (interface{}, error) {
 
 	directoryFiles, err := utils.DirectoryTree(configDir)
 	if err != nil {
-		fmt.Println(err) // log
+		log.Println(err)
 		return nil, err
 	}
 
@@ -294,7 +294,7 @@ func logsDir(minecraftDirectory string) (interface{}, error) {
 
 	directoryFiles, err := utils.DirectoryTree(logsDir)
 	if err != nil {
-		fmt.Println(err) // log
+		log.Println(err)
 		return nil, err
 	}
 
