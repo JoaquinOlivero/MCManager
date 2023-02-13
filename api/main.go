@@ -29,8 +29,6 @@ func main() {
 	}
 	defer file.Close()
 
-	log.SetOutput(file)
-
 	// flags.
 	port := flag.String("p", "", "-p flag defines the port to be used by MCManager. Defaults to 5555.")
 	dev := flag.Bool("dev", false, "Used to proxy requests to the front-end running in dev mode in port 3002. Therefore, not using the front-end static files in the build folder.")
@@ -39,6 +37,13 @@ func main() {
 
 	if *port == "" {
 		*port = "5555"
+	}
+
+	// Set logging output considering running mode.
+	if !*dev {
+		log.SetOutput(file) // logs to log.txt
+	} else {
+		log.SetOutput(os.Stdout) // logs to console.
 	}
 
 	os.Setenv("MCMANAGER_HTTP_PROXY_PORT", *port)
