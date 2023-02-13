@@ -1,0 +1,12 @@
+## Dockerfile for arm64
+FROM ubuntu:latest
+
+LABEL AUTHOR=JoaquinOlivero
+
+LABEL VERSION=1.0
+
+COPY MCManager /usr/local/MCManager
+
+WORKDIR /usr/local/MCManager
+
+CMD ["./MCManager-arm64-linux"]

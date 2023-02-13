@@ -45,8 +45,3 @@
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# docker
-Dockerfile
-Dockerfile-amd64
-Dockerfile-arm64
