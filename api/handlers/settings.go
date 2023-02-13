@@ -113,7 +113,17 @@ func ConnectDocker(c *gin.Context) {
 
 	defer db.Close()
 
-	_, err = db.Exec("UPDATE settings SET method=?, containerId=?, serverIp=?, directory=?, startCommand=? WHERE id=?", "docker", body.ContainerId, containerInfo.NetworkSettings.IPAddress, containerInfo.Mounts[0].Source, nil, 0)
+	var minecraftDirectory string
+
+	_, err = os.Stat("/.dockerenv")
+	if os.IsNotExist(err) {
+		minecraftDirectory = containerInfo.Mounts[0].Source
+	} else {
+		log.Println("MCManager is running in a docker container.")
+		minecraftDirectory = "/mc"
+	}
+
+	_, err = db.Exec("UPDATE settings SET method=?, containerId=?, serverIp=?, directory=?, startCommand=? WHERE id=?", "docker", body.ContainerId, containerInfo.NetworkSettings.IPAddress, minecraftDirectory, nil, 0)
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
