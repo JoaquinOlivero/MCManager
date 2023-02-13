@@ -201,8 +201,8 @@ func SaveCommand(c *gin.Context) {
 			c.String(400, err.Error())
 			return
 		}
-		// Third, check whether the minecraft directory contains all the required subdirectories.
-		dirsToCheck := []string{"mods", "config", "logs", "server.properties"}
+		// Third, check whether the minecraft directory contains the logs subdirectory and the server.properties file.
+		dirsToCheck := []string{"logs", "server.properties"}
 		var subDirectoriesErrors []string
 
 		for _, dir := range dirsToCheck {
@@ -236,6 +236,7 @@ func SaveCommand(c *gin.Context) {
 
 	_, err = db.Exec("UPDATE settings SET method=?, serverIp=?, directory=?, startCommand=?, containerId=? WHERE id=?", "command", "localhost", body.MinecraftDirectory, body.StartCommand, nil, 0)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 	}
 
