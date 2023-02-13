@@ -1,5 +1,5 @@
 import { useDataContext } from '../../../../../contexts/DataContext'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import styles from '../../../../../styles/components/SingleTab/components/SingleTabSettings/SingleTabSettings.module.scss'
 
 type Settings = {
@@ -16,20 +16,21 @@ type Props = {
 
 const Command = ({ settings, getSettings }: Props) => {
     const [mcDir, setMcDir] = useState<string>(settings.run_method !== "docker" ? settings.minecraft_directory : "")
-    const [startCommand, setStartCommand] = useState<string>(settings.run_method !== "docker" ? settings.start_command : "")
+    const [scriptName, setScriptName] = useState<string>(settings.run_method !== "docker" ? settings.start_command : "")
     const [isSaving, setisSaving] = useState<boolean>(false)
     const [responseError, setResponseError] = useState<null | string>(null)
+    const [shFiles, setShFiles] = useState<Array<string> | null>(null)
     const { completeSettings, setCompleteSettings } = useDataContext()
 
     const handleSaveDirAndCommand = () => {
-        if (mcDir === "" || startCommand === "") return
+        if (mcDir === "" || scriptName === "") return
 
         setisSaving(true)
         setResponseError(null)
 
         fetch("/api/settings/command/save", {
             method: "POST",
-            body: JSON.stringify({ "minecraft_directory": mcDir, "start_command": startCommand })
+            body: JSON.stringify({ "minecraft_directory": mcDir, "script": scriptName })
         }).then(res => {
             if (!res.ok) {
                 return res.text().then(text => { throw new Error(text) })
@@ -41,7 +42,27 @@ const Command = ({ settings, getSettings }: Props) => {
             setResponseError(err.message)
             setisSaving(false)
             setMcDir("")
-            setStartCommand("")
+            setScriptName("")
+        });
+    }
+
+    const handleGetScriptFiles = () => {
+        if (mcDir === "") return
+
+        fetch("/api/settings/command/files", {
+            method: "POST",
+            body: JSON.stringify({ "directory": mcDir })
+        }).then(res => {
+            if (!res.ok) {
+                return res.text().then(text => { throw new Error(text) })
+            }
+
+            return res.json().then(json => {
+                setShFiles(json.files)
+
+            })
+        }).catch(err => {
+            console.log(err.message)
         });
     }
 
@@ -52,10 +73,19 @@ const Command = ({ settings, getSettings }: Props) => {
                 <input type="text" onChange={(e) => setMcDir(e.target.value)} value={mcDir} />
             </div>
             <div className={styles.SingleTabSettings_content_title}>
-                Start Command
-                <input type="text" onChange={(e) => setStartCommand(e.target.value)} value={startCommand} />
+                Script
+                <select name="" id="" onMouseDown={handleGetScriptFiles} onChange={(e) => setScriptName(e.target.value)}>
+                    <option value="default" hidden>Select File</option>
+                    {shFiles ?
+                        shFiles.map((file: string) => {
+                            return <option key={file} value={file}>{file}</option>
+                        })
+                        :
+                        <option value="not-found" disabled>No file found</option>
+                    }
+                </select>
             </div>
-            <div className={styles.SingleTabSettings_btn} onClick={handleSaveDirAndCommand} style={mcDir === "" || mcDir === settings.minecraft_directory && startCommand === settings.start_command || startCommand === "" || isSaving ? { opacity: 0.5, pointerEvents: "none" } : {}}>
+            <div className={styles.SingleTabSettings_btn} onClick={handleSaveDirAndCommand} style={mcDir === "" || mcDir === settings.minecraft_directory && scriptName === settings.start_command || scriptName === "" || isSaving ? { opacity: 0.5, pointerEvents: "none" } : {}}>
                 {isSaving ? "Saving" : "Save"}
             </div>
             {responseError &&

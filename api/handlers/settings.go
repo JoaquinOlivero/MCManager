@@ -2,9 +2,11 @@ package handler
 
 import (
 	"MCManager/utils"
+	"bufio"
 	"context"
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +16,6 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 func GetSettings(c *gin.Context) {
@@ -163,30 +164,17 @@ func SaveCommand(c *gin.Context) {
 	// binding from JSON
 	type Body struct {
 		MinecraftDirectory string `json:"minecraft_directory" binding:"required"`
-		StartCommand       string `json:"start_command" binding:"startswith=java"`
+		Script             string `json:"script" binding:"required"`
 	}
 	// Bind request body
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
-		_, isValidationErr := err.(validator.ValidationErrors)
-		if isValidationErr {
-			for _, validationErr := range err.(validator.ValidationErrors) {
-				tag := validationErr.Tag()
-				if tag == "startswith" {
-					err := `The command needs to start with: "java"`
-					c.String(400, err)
-					return
-				}
-			}
-		}
-
-		// handles other err type
 		c.JSON(400, err.Error())
 		return
 	}
 
-	// Check that minecraft_directory exists and contains the "mods", "config", "logs" directories and the server.properties file.
+	// Check that minecraft_directory exists and contains the "logs" directories and the server.properties file.
 	// First, check whether minecraft_directory path is absolute.
 	isAbs := filepath.IsAbs(body.MinecraftDirectory)
 	if isAbs {
@@ -226,6 +214,27 @@ func SaveCommand(c *gin.Context) {
 		return
 	}
 
+	// Get command from the script file. Read file line by line and retrieve the line that starts with the word "java".
+	var command string
+	file, err := os.Open(filepath.Clean(body.MinecraftDirectory + "/" + body.Script))
+	if err != nil {
+		log.Println("Error opening file:", err)
+		c.String(500, err.Error())
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "java") {
+			command = line
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Println("Error scanning file:", err)
+	}
+
 	// Save new settings in the database.
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
@@ -234,7 +243,7 @@ func SaveCommand(c *gin.Context) {
 
 	defer db.Close()
 
-	_, err = db.Exec("UPDATE settings SET method=?, serverIp=?, directory=?, startCommand=?, containerId=? WHERE id=?", "command", "localhost", body.MinecraftDirectory, body.StartCommand, nil, 0)
+	_, err = db.Exec("UPDATE settings SET method=?, serverIp=?, directory=?, startCommand=?, containerId=? WHERE id=?", "command", "localhost", body.MinecraftDirectory, command, nil, 0)
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
@@ -243,6 +252,59 @@ func SaveCommand(c *gin.Context) {
 	db.Close()
 
 	c.Status(200)
+}
+
+func ScriptsInDir(c *gin.Context) {
+	// binding from JSON
+	type Body struct {
+		Dir string `json:"directory" binding:"required"`
+	}
+
+	// Bind request body
+	var body Body
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	var files []string
+
+	// First, check whether body.Dir path is absolute.
+	isAbs := filepath.IsAbs(body.Dir)
+	if isAbs {
+		// Second, check whether body.Dir exists.
+		_, err := os.Stat(body.Dir)
+		if err != nil {
+			isNotExists := os.IsNotExist(err)
+			if isNotExists {
+				c.String(400, "Directory does not exist")
+				return
+			}
+			c.String(400, err.Error())
+			return
+		}
+
+		// Third, find and return all the .sh files inside body.Dir.
+		err = filepath.WalkDir(body.Dir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				log.Println(err)
+				// c.String(500, err.Error())
+				return err
+			}
+
+			if filepath.Ext(path) == ".sh" {
+				files = append(files, filepath.Base(path))
+			}
+
+			return nil
+		})
+
+	} else {
+		c.String(400, "Path provided is not absolute")
+		return
+	}
+
+	c.JSON(200, gin.H{"files": files})
 }
 
 func BackupOption(c *gin.Context) {

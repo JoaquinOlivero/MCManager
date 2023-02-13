@@ -113,6 +113,7 @@ func main() {
 			command := settings.Group("/command")
 			{
 				command.POST("/save", handler.SaveCommand)
+				command.POST("/files", handler.ScriptsInDir)
 			}
 		}
 

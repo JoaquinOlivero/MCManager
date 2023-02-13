@@ -68,7 +68,7 @@ const Docker = ({ settings, dockerContainers, getSettings }: Props) => {
                         return <option key={container.container_id} value={container.container_id}>{container.container_name.substring(1)}</option>
                     })
                     :
-                    <option value="not-found">No docker container found</option>
+                    <option value="not-found" disabled>No docker container found</option>
                 }
             </select>
             <div className={styles.SingleTabSettings_btn} onClick={handleConnectDockerContainer} style={settings.run_method === "docker" ? { pointerEvents: "none", opacity: 0.5 } : {}}>

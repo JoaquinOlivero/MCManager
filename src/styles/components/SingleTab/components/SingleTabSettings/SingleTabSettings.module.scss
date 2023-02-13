@@ -41,11 +41,13 @@
           text-transform: uppercase;
           font-size: 14px;
           opacity: 0.8;
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
       }
 
       select {
-        // appearance: none;
         background-color: v.$primary-background-color;
         border: none;
         margin: 0;
@@ -65,7 +67,6 @@
         background-color: v.$primary-background-color;
         border: none;
         margin: 0;
-        margin-left: 5px;
         font-family: inherit;
         font-size: inherit;
         outline: none;
