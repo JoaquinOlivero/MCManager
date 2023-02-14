@@ -45,6 +45,7 @@ func GetHomeInfo(c *gin.Context) {
 	// Query db to retrieve settings data.
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, err)
 		return
 	}
@@ -79,6 +80,7 @@ func GetHomeInfo(c *gin.Context) {
 		case "command":
 			serverInfo, err := commandInfo(serverIp.String, startCommand.String, int(pid.Int32), serverInfo)
 			if err != nil {
+				log.Println(err)
 				c.JSON(500, err)
 				return
 			}
@@ -103,6 +105,7 @@ func ControlServer(c *gin.Context) {
 	// Database connection and query.
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, err)
 		return
 	}
@@ -126,6 +129,7 @@ func ControlServer(c *gin.Context) {
 		case "start":
 			res, err := startDockerContainer(containerId.String)
 			if err != nil {
+				log.Println(err)
 				c.JSON(res, err)
 				return
 			}
@@ -134,6 +138,7 @@ func ControlServer(c *gin.Context) {
 		case "stop":
 			res, err := stopDockerContainer(containerId.String)
 			if err != nil {
+				log.Println(err)
 				c.JSON(res, err)
 				return
 			}
@@ -146,6 +151,7 @@ func ControlServer(c *gin.Context) {
 		case "start":
 			res, err := startCommand(startCliCommand.String, directory.String, int(pid.Int32))
 			if err != nil {
+				log.Println(err)
 				c.JSON(res, err.Error())
 				return
 			}
@@ -155,6 +161,7 @@ func ControlServer(c *gin.Context) {
 		case "stop":
 			res, err := stopCommand(int(pid.Int32))
 			if err != nil {
+				log.Println(err)
 				c.JSON(res, err.Error())
 				return
 			}
@@ -175,6 +182,7 @@ func SendRconCommand(c *gin.Context) {
 	}
 
 	if rconEnable == "false" {
+		log.Println("Rcon is not enabled")
 		c.String(400, "Rcon is not enabled.")
 		return
 	}
@@ -187,6 +195,7 @@ func SendRconCommand(c *gin.Context) {
 	var body Body
 	err = c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.String(400, err.Error())
 		return
 	}
@@ -196,6 +205,7 @@ func SendRconCommand(c *gin.Context) {
 
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -203,6 +213,7 @@ func SendRconCommand(c *gin.Context) {
 	row := db.QueryRow("SELECT serverIp FROM settings WHERE id=?", 0)
 	err = row.Scan(&serverIp)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -210,24 +221,28 @@ func SendRconCommand(c *gin.Context) {
 	// Get rcon port and password from server.properties file.
 	rconPort, err := utils.ServerPropertiesLineValue("rcon.port")
 	if err != nil {
+		log.Println(err)
 		c.String(400, err.Error())
 		return
 	}
 
 	rconPassword, err := utils.ServerPropertiesLineValue("rcon.password")
 	if err != nil {
+		log.Println(err)
 		c.String(400, err.Error())
 		return
 	}
 
 	rconPortInt, err := strconv.Atoi(rconPort)
 	if err != nil {
+		log.Println(err)
 		c.String(400, err.Error())
 		return
 	}
 
 	rconResponse, err := rcon.Rcon(serverIp, rconPortInt, rconPassword, body.Command)
 	if err != nil {
+		log.Println(err)
 		c.String(400, err.Error())
 		return
 	}

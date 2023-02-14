@@ -24,6 +24,7 @@ func GetDirectory(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -33,6 +34,7 @@ func GetDirectory(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -43,6 +45,7 @@ func GetDirectory(c *gin.Context) {
 	case "world":
 		data, err := worldDir(minecraftDirectory)
 		if err != nil {
+			log.Println(err)
 			c.String(400, err.Error())
 			return
 		}
@@ -52,6 +55,7 @@ func GetDirectory(c *gin.Context) {
 	case "config":
 		data, err := configDir(minecraftDirectory)
 		if err != nil {
+			log.Println(err)
 			c.String(400, err.Error())
 			return
 		}
@@ -61,6 +65,7 @@ func GetDirectory(c *gin.Context) {
 	case "logs":
 		data, err := logsDir(minecraftDirectory)
 		if err != nil {
+			log.Println(err)
 			c.String(400, err.Error())
 			return
 		}
@@ -83,6 +88,7 @@ func RemoveFiles(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
@@ -91,6 +97,7 @@ func RemoveFiles(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -100,6 +107,7 @@ func RemoveFiles(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -117,12 +125,14 @@ func RemoveFiles(c *gin.Context) {
 		if fileStat.IsDir() {
 			err := os.RemoveAll(filePath)
 			if err != nil {
+				log.Println(err)
 				c.JSON(500, gin.H{"error": err})
 				break
 			}
 		} else {
 			err := os.Remove(filePath)
 			if err != nil {
+				log.Println(err)
 				c.JSON(500, gin.H{"error": err})
 				break
 			}
@@ -143,6 +153,7 @@ func ExtractLogFiles(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, err)
 		return
 	}
@@ -151,6 +162,7 @@ func ExtractLogFiles(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -160,6 +172,7 @@ func ExtractLogFiles(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -240,7 +253,6 @@ func worldDir(minecraftDirectory string) (interface{}, error) {
 		if noFile {
 			err = errors.New("no such file or directory")
 		}
-		log.Println(err)
 		return nil, err
 	}
 
@@ -268,7 +280,6 @@ func worldDir(minecraftDirectory string) (interface{}, error) {
 	worldDir := fmt.Sprintf("%v/%v", minecraftDirectory, worldDirName)
 	directoryFiles, err := utils.DirectoryTree(worldDir)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -281,7 +292,6 @@ func configDir(minecraftDirectory string) (interface{}, error) {
 
 	directoryFiles, err := utils.DirectoryTree(configDir)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -294,7 +304,6 @@ func logsDir(minecraftDirectory string) (interface{}, error) {
 
 	directoryFiles, err := utils.DirectoryTree(logsDir)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 

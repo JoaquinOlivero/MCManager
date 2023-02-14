@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	// "fmt"
 	"io/fs"
 	"net/http"
 	"os"
@@ -19,6 +18,7 @@ func Mods(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -28,6 +28,7 @@ func Mods(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -47,8 +48,7 @@ func Mods(c *gin.Context) {
 
 	walkFunc := func(root string, info fs.DirEntry, err error) error {
 		if err != nil {
-			log.Println(err)
-			return nil
+			return err
 		}
 
 		if info.IsDir() && info.Name() != "mods" {
@@ -69,6 +69,7 @@ func Mods(c *gin.Context) {
 	}
 
 	if len(modsArr) == 0 {
+		log.Println(err)
 		c.Status(204)
 		return
 	}
@@ -81,6 +82,7 @@ func UploadMods(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -90,6 +92,7 @@ func UploadMods(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -102,6 +105,7 @@ func UploadMods(c *gin.Context) {
 	// Multipart form
 	form, err := c.MultipartForm()
 	if err != nil {
+		log.Println(err)
 		c.String(http.StatusBadRequest, "get form err: %s", err.Error())
 		return
 	}
@@ -110,6 +114,7 @@ func UploadMods(c *gin.Context) {
 		filename := filepath.Base(file.Filename)
 		modPath := fmt.Sprintf("%v/%v", modsDirectory, filename)
 		if err := c.SaveUploadedFile(file, modPath); err != nil {
+			log.Println(err)
 			c.String(http.StatusBadRequest, "upload file err: %s", err.Error())
 			return
 		}
@@ -124,6 +129,7 @@ func RemoveMods(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -133,6 +139,7 @@ func RemoveMods(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -150,6 +157,7 @@ func RemoveMods(c *gin.Context) {
 	var body Body
 	err = c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.JSON(400, gin.H{"error": err.Error()})
 	}
 
@@ -159,6 +167,7 @@ func RemoveMods(c *gin.Context) {
 
 		err := os.Remove(modPath)
 		if err != nil {
+			log.Println(err)
 			c.JSON(400, gin.H{"error": err})
 		}
 	}

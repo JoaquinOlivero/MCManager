@@ -38,6 +38,7 @@ func GetSettings(c *gin.Context) {
 
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -48,6 +49,7 @@ func GetSettings(c *gin.Context) {
 	row := db.QueryRow("SELECT directory, method, containerId, startCommand FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory, &method, &containerId, &startCommand)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -56,6 +58,7 @@ func GetSettings(c *gin.Context) {
 	row2 := db.QueryRow("SELECT world, mods, config, serverProperties FROM backup WHERE id=?", 0)
 	err = row2.Scan(&world, &mods, &config, &serverProperties)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -92,17 +95,23 @@ func ConnectDocker(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	// connect to docker container and obtain additional information
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, gin.H{"error": err})
+		return
 	}
 	containerInfo, err := cli.ContainerInspect(context.Background(), body.ContainerId)
 	if err != nil {
+		log.Println(err)
 		c.JSON(500, gin.H{"error": err})
+		return
 	}
 
 	// Save settings to database.
@@ -110,6 +119,7 @@ func ConnectDocker(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
+		return
 	}
 
 	defer db.Close()
@@ -128,6 +138,7 @@ func ConnectDocker(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
+		return
 	}
 
 	db.Close()
@@ -153,6 +164,7 @@ func DisconnectDocker(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
+		return
 	}
 
 	db.Close()
@@ -170,6 +182,7 @@ func SaveCommand(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.JSON(400, err.Error())
 		return
 	}
@@ -183,9 +196,11 @@ func SaveCommand(c *gin.Context) {
 		if err != nil {
 			isNotExists := os.IsNotExist(err)
 			if isNotExists {
+				log.Println(err)
 				c.String(400, "Directory does not exist")
 				return
 			}
+			log.Println(err)
 			c.String(400, err.Error())
 			return
 		}
@@ -205,11 +220,13 @@ func SaveCommand(c *gin.Context) {
 
 		// Send response with directories that were not found.
 		if len(subDirectoriesErrors) > 0 {
+			log.Println(strings.Join(dirsToCheck, ", ") + " not found in " + `"` + body.MinecraftDirectory + `" directory`)
 			c.String(400, strings.Join(dirsToCheck, ", ")+" not found in "+`"`+body.MinecraftDirectory+`" directory`)
 			return
 		}
 
 	} else {
+		log.Println("Path provided is not absolute")
 		c.String(400, "Path provided is not absolute")
 		return
 	}
@@ -238,7 +255,9 @@ func SaveCommand(c *gin.Context) {
 	// Save new settings in the database.
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
+		return
 	}
 
 	defer db.Close()
@@ -247,6 +266,7 @@ func SaveCommand(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.String(500, err.Error())
+		return
 	}
 
 	db.Close()
@@ -264,7 +284,9 @@ func ScriptsInDir(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Println(err)
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
 	}
 
 	var files []string
@@ -277,9 +299,11 @@ func ScriptsInDir(c *gin.Context) {
 		if err != nil {
 			isNotExists := os.IsNotExist(err)
 			if isNotExists {
+				log.Println(err)
 				c.String(400, "Directory does not exist")
 				return
 			}
+			log.Println(err)
 			c.String(400, err.Error())
 			return
 		}
@@ -288,7 +312,6 @@ func ScriptsInDir(c *gin.Context) {
 		err = filepath.WalkDir(body.Dir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				log.Println(err)
-				// c.String(500, err.Error())
 				return err
 			}
 
@@ -300,6 +323,7 @@ func ScriptsInDir(c *gin.Context) {
 		})
 
 	} else {
+		log.Println("Path provided is not absolute")
 		c.String(400, "Path provided is not absolute")
 		return
 	}
@@ -317,6 +341,7 @@ func BackupOption(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
+		log.Println(err)
 		c.JSON(400, err.Error())
 		return
 	}
@@ -335,6 +360,7 @@ func BackupOption(c *gin.Context) {
 		if err != nil {
 			log.Println(err)
 			c.String(500, err.Error())
+			return
 		}
 
 		c.Status(200)
@@ -355,6 +381,7 @@ func CheckSettings(c *gin.Context) {
 
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -365,6 +392,7 @@ func CheckSettings(c *gin.Context) {
 	row := db.QueryRow("SELECT directory, method FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory, &method)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}

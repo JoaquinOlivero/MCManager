@@ -20,6 +20,7 @@ func Backup(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -29,6 +30,7 @@ func Backup(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}

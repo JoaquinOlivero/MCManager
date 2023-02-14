@@ -4,6 +4,7 @@ import (
 	"MCManager/utils"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,7 @@ func GetFile(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -42,6 +44,7 @@ func GetFile(c *gin.Context) {
 		fileFormat := filepath.Ext(strings.TrimSuffix(filepath.Base(fullFilePath), ".bak"))
 		fileContent, err := utils.FileData(fullFilePath, fileFormat)
 		if err != nil {
+			log.Println(err)
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
@@ -51,6 +54,7 @@ func GetFile(c *gin.Context) {
 	} else {
 		fileContent, err := utils.FileData(fullFilePath, fileExtension)
 		if err != nil {
+			log.Println(err)
 			c.String(400, err.Error())
 			return
 		}
@@ -70,7 +74,7 @@ func SaveFile(c *gin.Context) {
 	var body Body
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
-		// fmt.Println(err) log
+		log.Println(err)
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -79,6 +83,7 @@ func SaveFile(c *gin.Context) {
 	var minecraftDirectory string
 	db, err := sql.Open("sqlite3", "config.db")
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -88,6 +93,7 @@ func SaveFile(c *gin.Context) {
 	row := db.QueryRow("SELECT directory FROM settings WHERE id=?", 0)
 	err = row.Scan(&minecraftDirectory)
 	if err != nil {
+		log.Println(err)
 		c.String(500, err.Error())
 		return
 	}
@@ -100,7 +106,7 @@ func SaveFile(c *gin.Context) {
 	// Write to file
 	err = os.WriteFile(fullFilePath, []byte(body.FileContent), 0660)
 	if err != nil {
-		// fmt.Println(err) log
+		log.Println(err)
 		c.JSON(400, gin.H{"error": err})
 		return
 	}
