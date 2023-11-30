@@ -2,6 +2,17 @@
 
 MCManager is an easy-to-use Minecraft server manager web application.
 
+## Tech used:
+### Go
+- The Gin framework was used for the REST api server.
+
+### SQLite
+- To communicate betweeen Go and SQLite I used the Go [sql package](https://pkg.go.dev/database/sql).
+
+### TypeScript - Next.js
+- Next.js was the choice for the frontend framework.
+- No other 3rd party library, package or framework was used besides Next.js.
+
 ### Features:
 
 - Run the Minecraft server as a background process.
